@@ -1,0 +1,2 @@
+supabase uruchomienie: 
+! w katalogu projektu : npx supabase start
