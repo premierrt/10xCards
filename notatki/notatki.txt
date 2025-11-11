@@ -1,3 +1,4 @@
 supabase uruchomienie: 
 ! w katalogu projektu : npx supabase start
 migracja : npx supabase migration up
+user : rafal/Rafal123
