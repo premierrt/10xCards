@@ -92,21 +92,51 @@ export type UpdateFlashcardResponse = Pick<Flashcard, "flashcard_id" | "question
 // ============================================================================
 
 /**
- * Request DTO for creating a new flashcard set
+ * Request DTO for creating a new flashcard set with accepted flashcards
  * POST /api/flashcard-sets
  */
 export interface CreateFlashcardSetRequest {
   user_id: string;
   name: string;
+  flashcard_ids: number[];
 }
 
 /**
  * Response DTO for flashcard set creation
- * Returns minimal set information after successful creation
+ * Returns set information and count of added flashcards
  */
 export interface CreateFlashcardSetResponse {
   set_id: number;
   created_at: string;
+  flashcards_added: number;
+}
+
+/**
+ * Query parameters for retrieving flashcard sets list
+ * GET /api/flashcard-sets
+ */
+export interface GetFlashcardSetsQuery {
+  page?: number;
+  limit?: number;
+}
+
+/**
+ * Single flashcard set item for list responses
+ */
+export interface FlashcardSetListItem {
+  set_id: number;
+  name: string;
+  flashcard_count: number;
+  created_at: string;
+}
+
+/**
+ * Response DTO for flashcard sets list endpoint
+ * GET /api/flashcard-sets
+ */
+export interface GetFlashcardSetsResponse {
+  sets: FlashcardSetListItem[];
+  pagination: PaginationInfo;
 }
 
 /**

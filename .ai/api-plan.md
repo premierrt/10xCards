@@ -37,11 +37,20 @@
 
 ### Flashcard Sets
 - **POST /api/flashcard-sets**
-  - Creates a flashcard set.
-  - **Request JSON**: `{ "user_id": 1, "name": "Unique Set Name" }`
-  - **Response JSON**: `{ "set_id": 1, "created_at": "2023-01-01T00:00:00Z" }`
+  - Creates a flashcard set with accepted flashcards.
+  - **Request JSON**: `{ "user_id": 1, "name": "Unique Set Name", "flashcard_ids": [1, 3, 5] }`
+  - **Response JSON**: `{ "set_id": 1, "created_at": "2023-01-01T00:00:00Z", "flashcards_added": 3 }`
   - **Success Codes**: 201 Created
-  - **Error Codes**: 400 Bad Request (if name is taken), 401 Unauthorized
+  - **Error Codes**: 400 Bad Request (if name is taken or flashcards are not accepted), 401 Unauthorized
+
+- **GET /api/flashcard-sets**
+  - Retrieves list of user's flashcard sets.
+  - **Query Parameters**:
+    - `page` (default: 1)
+    - `limit` (default: 10, max: 100)
+  - **Response JSON**: `{ "sets": [{ "set_id": 1, "name": "Set Name", "flashcard_count": 15, "created_at": "2023-01-01T00:00:00Z" }], "pagination": { "page": 1, "limit": 10, "total": 5, "total_pages": 1 } }`
+  - **Success Codes**: 200 OK
+  - **Error Codes**: 401 Unauthorized
 
 - **DELETE /api/flashcard-sets/{set_id}**
   - Deletes a flashcard set.
