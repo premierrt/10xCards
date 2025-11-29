@@ -2,3 +2,53 @@ supabase uruchomienie:
 ! w katalogu projektu : npx supabase start
 migracja : npx supabase migration up
 user : rafal/Rafal123
+
+STUDIO_URL="http://127.0.0.1:54323"
+http://localhost:54323/project/default
+
+
+===mockowanie:
+
+How to Control Service Selection:
+Automatic (Recommended)
+Development: Uses mock service by default
+Production: Uses real service if OPENROUTER_API_KEY is set
+Manual Override Options
+Environment Variables:
+Potentially dangerous command
+Bash
+Run
+# Force mock service
+USE_MOCK_AI=true
+
+# Force real service in development
+USE_REAL_AI=true
+Query Parameter:
+Potentially dangerous command
+Bash
+Run
+POST /api/flashcards/generate?mock=true
+Request Header:
+Potentially dangerous command
+Bash
+Run
+X-Use-Mock: true
+Debug Information
+The factory now logs debug information showing which service is being selected and why. You should see console output like:
+
+Potentially dangerous command
+Bash
+Run
+🔍 Flashcard Service Factory Debug: {
+  USE_MOCK_AI: undefined,
+  useMock: false,
+  hasApiKey: true,
+  isDevelopment: true,
+  NODE_ENV: "development",
+  DEV: true
+}
+🔧 Using mock flashcard generation service
+Testing the Fix
+With the development server running, try making a POST request to /api/flashcards/generate and you should now see the mock service being used instead of getting the "OPENROUTER_API_KEY environment variable is required" error.
+
+The mock service will generate contextual flashcards based on your input text and simulate realistic API delays and occasional errors for testing purposes.
