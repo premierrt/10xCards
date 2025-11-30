@@ -43,3 +43,25 @@ export const aiGeneratedFlashcardsArraySchema = z
  * Type inference for AI-generated flashcard
  */
 export type AIGeneratedFlashcard = z.infer<typeof aiGeneratedFlashcardSchema>;
+
+/**
+ * Validation schema for creating flashcard sets
+ * Validates request body for POST /api/flashcard-sets
+ */
+export const createFlashcardSetSchema = z.object({
+  user_id: z.string().uuid("User ID must be a valid UUID"),
+  name: z
+    .string()
+    .min(1, "Set name is required")
+    .max(100, "Set name must not exceed 100 characters")
+    .transform((name) => name.trim()),
+  flashcard_ids: z
+    .array(z.number().int("Flashcard ID must be an integer").positive("Flashcard ID must be positive"))
+    .min(1, "At least one flashcard is required")
+    .max(100, "Cannot add more than 100 flashcards to a set"),
+});
+
+/**
+ * Type inference for the validated flashcard set creation request
+ */
+export type CreateFlashcardSetValidated = z.infer<typeof createFlashcardSetSchema>;

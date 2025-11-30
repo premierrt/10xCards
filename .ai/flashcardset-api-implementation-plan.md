@@ -112,21 +112,9 @@ Każdy błąd powinien być odpowiednio zalogowany oraz opakowany w standardowy 
    - Wykorzystanie Supabase client (zgodnie z zasadami w `backend.mdc`), zwłaszcza poprzez korzystanie z `context.locals`
    - Upewnienie się, że zapytania są zoptymalizowane i korzystają z odpowiednich indeksów
 
-<<<<<<< HEAD
-5. **Testowanie**:
-   - Testy jednostkowe dla modułu serwisowego, weryfikujące logikę walidacji oraz tworzenia rekordu
-   - Testy integracyjne dla endpointu API (symulujące różne scenariusze, np. konflikt nazwy, flashcard niezaakceptowane)
-=======
->>>>>>> 69c1790 (chore: add flashcardset implementation plan)
 
 6. **Obsługa błędów i logowanie**:
    - Implementacja globalnego middleware do obsługi błędów (zgodnie z zasadami z `shared.mdc`)
    - Zapisywanie błędów systemowych do dedykowanego logu
 
-<<<<<<< HEAD
-7. **Wdrożenie i monitoring**:
-   - Wdrożenie endpointu na środowisku testowym
-   - Monitorowanie wydajności i logów w celu szybkiego reagowania na potencjalne problemy
-=======
 
->>>>>>> 69c1790 (chore: add flashcardset implementation plan)
