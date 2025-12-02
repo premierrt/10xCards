@@ -68,9 +68,19 @@
   - **Query Parameters**:
     - `page` (default: 1)
     - `limit` (default: 10, max: 100)
-  - **Response JSON**: `{ "sets": [{ "set_id": 1, "name": "Set Name", "flashcard_count": 15, "created_at": "2023-01-01T00:00:00Z" }], "pagination": { "page": 1, "limit": 10, "total": 5, "total_pages": 1 } }`
+    - `include_flashcards` (default: true, options: true, false) - whether to include flashcard IDs
+  - **Response JSON**: `{ "sets": [{ "set_id": 1, "name": "Set Name", "flashcard_count": 15, "flashcard_ids": [1, 3, 5, 7, 9], "created_at": "2023-01-01T00:00:00Z" }], "pagination": { "page": 1, "limit": 10, "total": 5, "total_pages": 1 } }`
   - **Success Codes**: 200 OK
   - **Error Codes**: 401 Unauthorized
+
+- **GET /api/flashcard-sets/{set_id}**
+  - Retrieves a specific flashcard set with full flashcard details.
+  - **Query Parameters**:
+    - `include_flashcard_details` (default: false, options: true, false) - whether to include full flashcard content (question/answer) or just IDs
+  - **Response JSON (include_flashcard_details=false)**: `{ "set_id": 1, "name": "Set Name", "flashcard_count": 15, "flashcard_ids": [1, 3, 5, 7, 9], "created_at": "2023-01-01T00:00:00Z" }`
+  - **Response JSON (include_flashcard_details=true)**: `{ "set_id": 1, "name": "Set Name", "flashcard_count": 15, "flashcards": [{ "flashcard_id": 1, "question": "What is...?", "answer": "It is..." }, { "flashcard_id": 3, "question": "How does...?", "answer": "It works by..." }], "created_at": "2023-01-01T00:00:00Z" }`
+  - **Success Codes**: 200 OK
+  - **Error Codes**: 404 Not Found (if set doesn't exist or doesn't belong to user), 401 Unauthorized
 
 - **DELETE /api/flashcard-sets/{set_id}**
   - Deletes a flashcard set.
