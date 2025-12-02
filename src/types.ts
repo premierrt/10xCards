@@ -87,6 +87,28 @@ export type UpdateFlashcardRequest = Partial<Pick<TablesUpdate<"flashcards">, "q
  */
 export type UpdateFlashcardResponse = Pick<Flashcard, "flashcard_id" | "question" | "answer" | "status">;
 
+/**
+ * Response DTO for bulk flashcard operations (update/delete)
+ * Returns statistics and detailed results for each flashcard
+ */
+export interface BulkFlashcardOperationResponse {
+  updated_count?: number;
+  deleted_count?: number;
+  failed_count: number;
+  results: {
+    flashcard_id: number;
+    status: "updated" | "deleted" | "not_found";
+  }[];
+}
+
+/**
+ * Response DTO for flashcard deletion
+ * DELETE /api/flashcards/{flashcard_id}
+ */
+export interface DeleteFlashcardResponse {
+  message: string;
+}
+
 // ============================================================================
 // Flashcard Set DTOs
 // ============================================================================

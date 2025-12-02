@@ -65,3 +65,76 @@ export const createFlashcardSetSchema = z.object({
  * Type inference for the validated flashcard set creation request
  */
 export type CreateFlashcardSetValidated = z.infer<typeof createFlashcardSetSchema>;
+
+/**
+ * Schema for validating GET /api/flashcards query parameters
+ */
+export const getFlashcardsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+  sort_by: z.enum(["created_at", "question", "answer"]).default("created_at"),
+  sort_order: z.enum(["asc", "desc"]).default("desc"),
+});
+
+/**
+ * Schema for validating PATCH /api/flashcards/{flashcard_id} request body
+ */
+export const updateFlashcardSchema = z
+  .object({
+    question: z.string().min(1, "Question cannot be empty").max(500, "Question too long").optional(),
+    answer: z.string().min(1, "Answer cannot be empty").max(1000, "Answer too long").optional(),
+    status: z.string().min(1, "Status cannot be empty").max(50, "Status too long").optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, { message: "At least one field must be provided for update" });
+
+/**
+ * Schema for validating flashcard_id parameter
+ */
+export const flashcardIdSchema = z.coerce.number().int().positive("Flashcard ID must be a positive integer");
+
+/**
+ * Schema for validating PATCH /api/flashcards/bulk request body
+ */
+export const bulkUpdateFlashcardsSchema = z.object({
+  flashcard_ids: z
+    .array(z.number().int().positive())
+    .min(1, "At least one flashcard ID required")
+    .max(100, "Cannot update more than 100 flashcards at once"),
+  updates: z
+    .object({
+      question: z.string().min(1, "Question cannot be empty").max(500, "Question too long").optional(),
+      answer: z.string().min(1, "Answer cannot be empty").max(1000, "Answer too long").optional(),
+      status: z.string().min(1, "Status cannot be empty").max(50, "Status too long").optional(),
+    })
+    .refine((data) => Object.keys(data).length > 0, { message: "At least one field must be provided in updates" }),
+});
+
+/**
+ * Schema for validating bulk delete request body
+ */
+export const bulkDeleteFlashcardsSchema = z.object({
+  flashcard_ids: z
+    .array(z.number().int().positive())
+    .min(1, "At least one flashcard ID required")
+    .max(100, "Cannot delete more than 100 flashcards at once"),
+});
+
+/**
+ * Type inference for the validated query parameters
+ */
+export type GetFlashcardsQueryValidated = z.infer<typeof getFlashcardsQuerySchema>;
+
+/**
+ * Type inference for the validated update request
+ */
+export type UpdateFlashcardValidated = z.infer<typeof updateFlashcardSchema>;
+
+/**
+ * Type inference for the validated bulk update request
+ */
+export type BulkUpdateFlashcardsValidated = z.infer<typeof bulkUpdateFlashcardsSchema>;
+
+/**
+ * Type inference for the validated bulk delete request
+ */
+export type BulkDeleteFlashcardsValidated = z.infer<typeof bulkDeleteFlashcardsSchema>;
