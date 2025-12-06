@@ -1,5 +1,13 @@
 import type { SupabaseClient } from "../../db/supabase.client";
-import type { CreateFlashcardSetResponse } from "../../types";
+import type {
+  CreateFlashcardSetResponse,
+  GetFlashcardSetsResponse,
+  FlashcardSetListItem,
+  GetSingleFlashcardSetResponse,
+  FlashcardDetails,
+  DeleteFlashcardSetResponse,
+  PaginationInfo,
+} from "../../types";
 
 /**
  * Logger utility for structured logging in FlashcardSetService
@@ -276,6 +284,303 @@ export class FlashcardSetService {
 
       throw new FlashcardSetError(
         `Unexpected error creating flashcard set: ${error instanceof Error ? error.message : "Unknown error"}`,
+        500,
+        "INTERNAL_ERROR"
+      );
+    }
+  }
+
+  /**
+   * Get a list of flashcard sets for a user with pagination
+   * @param userId - The user ID
+   * @param page - Page number (1-based)
+   * @param limit - Number of items per page
+   * @param includeFlashcards - Whether to include flashcard IDs in response
+   * @returns Promise<GetFlashcardSetsResponse>
+   */
+  async getFlashcardSets(
+    userId: string,
+    page = 1,
+    limit = 10,
+    includeFlashcards = true
+  ): Promise<GetFlashcardSetsResponse> {
+    const context = { userId, page, limit, includeFlashcards };
+    ServiceLogger.info("Getting flashcard sets list", context);
+
+    // Calculate offset for pagination
+    const offset = (page - 1) * limit;
+
+    try {
+      // First, get the total count
+      const { count, error: countError } = await this.supabase
+        .from("flashcard_sets")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", userId);
+
+      if (countError) {
+        ServiceLogger.error("Failed to get flashcard sets count", countError, context);
+        throw new FlashcardSetError(`Failed to get flashcard sets count: ${countError.message}`, 500, "DATABASE_ERROR");
+      }
+
+      const totalCount = count || 0;
+      const totalPages = Math.ceil(totalCount / limit);
+
+      // Get the flashcard sets with flashcard counts
+      const { data: setsData, error: setsError } = await this.supabase
+        .from("flashcard_sets")
+        .select(
+          `
+          set_id,
+          name,
+          created_at,
+          flashcard_set_flashcards(flashcard_id)
+        `
+        )
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (setsError) {
+        ServiceLogger.error("Failed to get flashcard sets", setsError, context);
+        throw new FlashcardSetError(`Failed to get flashcard sets: ${setsError.message}`, 500, "DATABASE_ERROR");
+      }
+
+      // Define the structure of the data returned from Supabase
+      interface SetWithFlashcards {
+        set_id: number;
+        name: string;
+        created_at: string | null;
+        flashcard_set_flashcards: { flashcard_id: number | null }[] | null;
+      }
+
+      // Transform the data to match our DTO structure
+      const sets: FlashcardSetListItem[] = ((setsData as SetWithFlashcards[]) || []).map((set) => {
+        const flashcardIds =
+          set.flashcard_set_flashcards?.map((f) => f.flashcard_id).filter((id): id is number => id !== null) || [];
+
+        const baseSet: FlashcardSetListItem = {
+          set_id: set.set_id,
+          name: set.name,
+          flashcard_count: flashcardIds.length,
+          created_at: set.created_at || new Date().toISOString(),
+        };
+
+        // Include flashcard IDs if requested
+        if (includeFlashcards) {
+          baseSet.flashcard_ids = flashcardIds;
+        }
+
+        return baseSet;
+      });
+
+      const pagination: PaginationInfo = {
+        page,
+        limit,
+        total: totalCount,
+        total_pages: totalPages,
+      };
+
+      const result = { sets, pagination };
+
+      ServiceLogger.info("Flashcard sets list retrieved successfully", {
+        ...context,
+        resultCount: sets.length,
+        totalCount,
+        totalPages,
+      });
+
+      return result;
+    } catch (error) {
+      if (error instanceof FlashcardSetError) {
+        throw error;
+      }
+
+      ServiceLogger.error("Unexpected error getting flashcard sets", error, context);
+      throw new FlashcardSetError(
+        `Unexpected error getting flashcard sets: ${error instanceof Error ? error.message : "Unknown error"}`,
+        500,
+        "INTERNAL_ERROR"
+      );
+    }
+  }
+
+  /**
+   * Get a single flashcard set with optional flashcard details
+   * @param userId - The user ID
+   * @param setId - The set ID
+   * @param includeFlashcardDetails - Whether to include full flashcard details
+   * @returns Promise<GetSingleFlashcardSetResponse>
+   */
+  async getSingleFlashcardSet(
+    userId: string,
+    setId: number,
+    includeFlashcardDetails = false
+  ): Promise<GetSingleFlashcardSetResponse> {
+    const context = { userId, setId, includeFlashcardDetails };
+    ServiceLogger.info("Getting single flashcard set", context);
+
+    try {
+      // Verify the set exists and belongs to the user
+      const { data: setData, error: setError } = await this.supabase
+        .from("flashcard_sets")
+        .select("set_id, name, created_at")
+        .eq("set_id", setId)
+        .eq("user_id", userId)
+        .single();
+
+      if (setError || !setData) {
+        if (setError?.code === "PGRST116") {
+          ServiceLogger.info("Flashcard set not found or access denied", { ...context, errorCode: setError.code });
+          throw new FlashcardSetError("Flashcard set not found", 404, "SET_NOT_FOUND");
+        }
+
+        ServiceLogger.error("Failed to get flashcard set", setError, context);
+        throw new FlashcardSetError(
+          `Failed to get flashcard set: ${setError?.message || "Unknown error"}`,
+          500,
+          "DATABASE_ERROR"
+        );
+      }
+
+      // Get flashcards associated with the set
+      const flashcardsQuery = this.supabase
+        .from("flashcard_set_flashcards")
+        .select(includeFlashcardDetails ? "flashcard_id, flashcards(question, answer)" : "flashcard_id")
+        .eq("set_id", setId);
+
+      const { data: flashcardsData, error: flashcardsError } = await flashcardsQuery;
+
+      if (flashcardsError) {
+        ServiceLogger.error("Failed to get flashcards for set", flashcardsError, context);
+        throw new FlashcardSetError(
+          `Failed to get flashcards for set: ${flashcardsError.message}`,
+          500,
+          "DATABASE_ERROR"
+        );
+      }
+
+      // Define the structure of the data returned from Supabase
+      interface FlashcardSetFlashcardWithDetails {
+        flashcard_id: number | null;
+        flashcards?: {
+          question: string;
+          answer: string;
+        } | null;
+      }
+
+      interface FlashcardSetFlashcardBasic {
+        flashcard_id: number | null;
+      }
+
+      // Transform flashcards data based on includeFlashcardDetails flag
+      let flashcards: number[] | FlashcardDetails[];
+
+      if (includeFlashcardDetails) {
+        flashcards = ((flashcardsData || []) as unknown as FlashcardSetFlashcardWithDetails[]).map((item) => ({
+          flashcard_id: item.flashcard_id || 0,
+          question: item.flashcards?.question || "",
+          answer: item.flashcards?.answer || "",
+        }));
+      } else {
+        flashcards = ((flashcardsData || []) as unknown as FlashcardSetFlashcardBasic[])
+          .map((item) => item.flashcard_id)
+          .filter((id): id is number => id !== null);
+      }
+
+      const result: GetSingleFlashcardSetResponse = {
+        set_id: setData.set_id,
+        name: setData.name,
+        flashcard_count: flashcards.length,
+        created_at: setData.created_at || new Date().toISOString(),
+        flashcards,
+      };
+
+      ServiceLogger.info("Single flashcard set retrieved successfully", {
+        ...context,
+        flashcardCount: flashcards.length,
+      });
+
+      return result;
+    } catch (error) {
+      if (error instanceof FlashcardSetError) {
+        throw error;
+      }
+
+      ServiceLogger.error("Unexpected error getting single flashcard set", error, context);
+      throw new FlashcardSetError(
+        `Unexpected error getting flashcard set: ${error instanceof Error ? error.message : "Unknown error"}`,
+        500,
+        "INTERNAL_ERROR"
+      );
+    }
+  }
+
+  /**
+   * Delete a flashcard set and all its associations
+   * @param userId - The user ID
+   * @param setId - The set ID to delete
+   * @returns Promise<DeleteFlashcardSetResponse>
+   */
+  async deleteFlashcardSet(userId: string, setId: number): Promise<DeleteFlashcardSetResponse> {
+    const context = { userId, setId };
+    ServiceLogger.info("Deleting flashcard set", context);
+
+    try {
+      // First verify the set exists and belongs to the user
+      const { data: setData, error: verifyError } = await this.supabase
+        .from("flashcard_sets")
+        .select("set_id, name")
+        .eq("set_id", setId)
+        .eq("user_id", userId)
+        .single();
+
+      if (verifyError || !setData) {
+        if (verifyError?.code === "PGRST116") {
+          ServiceLogger.info("Flashcard set not found or access denied for deletion", {
+            ...context,
+            errorCode: verifyError.code,
+          });
+          throw new FlashcardSetError("Flashcard set not found", 404, "SET_NOT_FOUND");
+        }
+
+        ServiceLogger.error("Failed to verify flashcard set for deletion", verifyError, context);
+        throw new FlashcardSetError(
+          `Failed to verify flashcard set: ${verifyError?.message || "Unknown error"}`,
+          500,
+          "DATABASE_ERROR"
+        );
+      }
+
+      // Delete the flashcard set (cascade will handle flashcard_set_flashcards)
+      const { error: deleteError } = await this.supabase
+        .from("flashcard_sets")
+        .delete()
+        .eq("set_id", setId)
+        .eq("user_id", userId);
+
+      if (deleteError) {
+        ServiceLogger.error("Failed to delete flashcard set", deleteError, context);
+        throw new FlashcardSetError(`Failed to delete flashcard set: ${deleteError.message}`, 500, "DATABASE_ERROR");
+      }
+
+      const result: DeleteFlashcardSetResponse = {
+        message: `Flashcard set "${setData.name}" has been successfully deleted`,
+      };
+
+      ServiceLogger.info("Flashcard set deleted successfully", {
+        ...context,
+        setName: setData.name,
+      });
+
+      return result;
+    } catch (error) {
+      if (error instanceof FlashcardSetError) {
+        throw error;
+      }
+
+      ServiceLogger.error("Unexpected error deleting flashcard set", error, context);
+      throw new FlashcardSetError(
+        `Unexpected error deleting flashcard set: ${error instanceof Error ? error.message : "Unknown error"}`,
         500,
         "INTERNAL_ERROR"
       );

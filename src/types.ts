@@ -140,6 +140,7 @@ export interface CreateFlashcardSetResponse {
 export interface GetFlashcardSetsQuery {
   page?: number;
   limit?: number;
+  include_flashcards?: boolean;
 }
 
 /**
@@ -150,6 +151,7 @@ export interface FlashcardSetListItem {
   name: string;
   flashcard_count: number;
   created_at: string;
+  flashcard_ids?: number[];
 }
 
 /**
@@ -159,6 +161,35 @@ export interface FlashcardSetListItem {
 export interface GetFlashcardSetsResponse {
   sets: FlashcardSetListItem[];
   pagination: PaginationInfo;
+}
+
+/**
+ * Query parameters for retrieving a single flashcard set
+ * GET /api/flashcard-sets/{set_id}
+ */
+export interface GetSingleFlashcardSetQuery {
+  include_flashcard_details?: boolean;
+}
+
+/**
+ * Flashcard details for single set response
+ */
+export interface FlashcardDetails {
+  flashcard_id: number;
+  question: string;
+  answer: string;
+}
+
+/**
+ * Response DTO for single flashcard set endpoint
+ * GET /api/flashcard-sets/{set_id}
+ */
+export interface GetSingleFlashcardSetResponse {
+  set_id: number;
+  name: string;
+  flashcard_count: number;
+  created_at: string;
+  flashcards: number[] | FlashcardDetails[];
 }
 
 /**

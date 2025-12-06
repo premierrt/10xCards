@@ -1,8 +1,5 @@
 import type { AIGeneratedFlashcard } from "../schemas/flashcard-schemas";
-import {
-  flashcardGenerationService as flashcardGenerationMockService,
-  FlashcardGenerationError as MockFlashcardGenerationError,
-} from "./flashcard-generation-mock.service";
+import { flashcardGenerationService as flashcardGenerationMockService } from "./flashcard-generation-mock.service";
 
 // Re-export error class from mock service to avoid static import of real service
 export { FlashcardGenerationError } from "./flashcard-generation-mock.service";
@@ -45,30 +42,37 @@ class LazyRealFlashcardService implements IFlashcardGenerationService {
  * based on environment configuration
  */
 export class FlashcardGenerationFactory {
+  // Prevent instantiation
+  private constructor() {}
+
   /**
    * Get the flashcard generation service instance
    * Returns mock service if USE_MOCK_AI is true or OPENROUTER_API_KEY is not set
    * Returns real service otherwise (lazy loaded to avoid initialization errors)
    */
   static getService(): IFlashcardGenerationService {
-    const useMock = import.meta.env.USE_MOCK_AI === "true" || import.meta.env.USE_MOCK_AI === true;
-    const hasApiKey = Boolean(import.meta.env.OPENROUTER_API_KEY);
-    const isDevelopment = import.meta.env.NODE_ENV === "development" || import.meta.env.DEV;
+    const useMockEnv = import.meta.env.USE_MOCK_AI;
+    const useMock = useMockEnv === "true" || useMockEnv === true;
+    const apiKey = import.meta.env.OPENROUTER_API_KEY;
+    const hasApiKey = typeof apiKey === "string" && apiKey.trim().length > 0;
+    const nodeEnv = import.meta.env.NODE_ENV;
+    const isDevelopment = nodeEnv === "development" || import.meta.env.DEV === true;
+    const useRealAI = import.meta.env.USE_REAL_AI;
 
     // Debug logging
     console.log("🔍 Flashcard Service Factory Debug:", {
-      USE_MOCK_AI: import.meta.env.USE_MOCK_AI,
+      USE_MOCK_AI: useMockEnv,
       useMock,
       hasApiKey,
       isDevelopment,
-      NODE_ENV: import.meta.env.NODE_ENV,
+      NODE_ENV: nodeEnv,
       DEV: import.meta.env.DEV,
     });
 
     // Always use mock service in development unless explicitly disabled
     // OR if explicitly requested
     // OR if no API key is provided
-    if (useMock || !hasApiKey || (isDevelopment && import.meta.env.USE_REAL_AI !== "true")) {
+    if (useMock || !hasApiKey || (isDevelopment && useRealAI !== "true")) {
       console.log("🔧 Using mock flashcard generation service");
       return flashcardGenerationMockService;
     }

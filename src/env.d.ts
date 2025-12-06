@@ -17,6 +17,9 @@ interface ImportMetaEnv {
   readonly OPENROUTER_API_KEY?: string;
   readonly OPENROUTER_MODEL?: string;
   readonly USE_MOCK_AI?: string | boolean;
+  readonly USE_REAL_AI?: string | boolean;
+  readonly NODE_ENV?: string;
+  readonly DEV?: boolean;
   readonly SITE?: string;
   // more env variables...
 }

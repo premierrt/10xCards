@@ -138,3 +138,34 @@ export type BulkUpdateFlashcardsValidated = z.infer<typeof bulkUpdateFlashcardsS
  * Type inference for the validated bulk delete request
  */
 export type BulkDeleteFlashcardsValidated = z.infer<typeof bulkDeleteFlashcardsSchema>;
+
+/**
+ * Schema for validating GET /api/flashcard-sets query parameters
+ */
+export const getFlashcardSetsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+  include_flashcards: z.coerce.boolean().default(true),
+});
+
+/**
+ * Schema for validating GET /api/flashcard-sets/{set_id} query parameters
+ */
+export const getSingleFlashcardSetQuerySchema = z.object({
+  include_flashcard_details: z.coerce.boolean().default(false),
+});
+
+/**
+ * Schema for validating set_id parameter
+ */
+export const setIdSchema = z.coerce.number().int().positive("Set ID must be a positive integer");
+
+/**
+ * Type inference for the validated flashcard sets list query
+ */
+export type GetFlashcardSetsQueryValidated = z.infer<typeof getFlashcardSetsQuerySchema>;
+
+/**
+ * Type inference for the validated single flashcard set query
+ */
+export type GetSingleFlashcardSetQueryValidated = z.infer<typeof getSingleFlashcardSetQuerySchema>;
