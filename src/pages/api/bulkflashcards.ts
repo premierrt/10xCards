@@ -1,17 +1,18 @@
 import type { APIRoute } from "astro";
 import { z } from "zod";
-import type { UpdateFlashcardRequest, BulkFlashcardOperationResponse, ApiErrorResponse } from "../../../types";
+import type { UpdateFlashcardRequest, BulkFlashcardOperationResponse, ApiErrorResponse } from "../../types";
 
-import { DEFAULT_USER_ID } from "../../../db/supabase.client";
-import { bulkUpdateFlashcardsSchema } from "../../../lib/schemas/flashcard-schemas";
+import { DEFAULT_USER_ID } from "../../db/supabase.client";
+import { bulkUpdateFlashcardsSchema } from "../../lib/schemas/flashcard-schemas";
 
 export const prerender = false;
 
 // ============================================================================
-// PATCH /api/flashcards/bulk - Bulk update flashcards
+// PATCH /api/bulk-flashcards - Bulk update flashcards
 // ============================================================================
 
 export const PATCH: APIRoute = async ({ request, locals }) => {
+  console.log("[BULK-FLASHCARDS] PATCH endpoint HIT!");
   try {
     // Authentication check
     const supabase = locals.supabase;
@@ -46,9 +47,12 @@ export const PATCH: APIRoute = async ({ request, locals }) => {
     let requestBody: { flashcard_ids: number[]; updates: UpdateFlashcardRequest };
     try {
       const rawBody = await request.json();
+      console.log("[BULK UPDATE] Raw request body:", JSON.stringify(rawBody, null, 2));
       requestBody = bulkUpdateFlashcardsSchema.parse(rawBody);
+      console.log("[BULK UPDATE] Validated request:", JSON.stringify(requestBody, null, 2));
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error("[BULK UPDATE] Validation error:", JSON.stringify(error.errors, null, 2));
         return new Response(
           JSON.stringify({
             error: "VALIDATION_ERROR",
@@ -138,7 +142,7 @@ export const PATCH: APIRoute = async ({ request, locals }) => {
       );
     }
   } catch (error) {
-    console.error("Unhandled error in PATCH /api/flashcards/bulk:", error);
+    console.error("Unhandled error in PATCH /api/bulk-flashcards:", error);
 
     return new Response(
       JSON.stringify({
