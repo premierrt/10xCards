@@ -35,7 +35,7 @@
   - **Success Codes**: 200 OK
   - **Error Codes**: 404 Not Found (if flashcard doesn't exist), 400 Bad Request (if validation fails), 401 Unauthorized
 
-- **PATCH /api/flashcards/bulk**
+- **PATCH /api/bulk-flashcards**
   - Updates multiple flashcards at once (typically for status changes).
   - **Request JSON**: `{ "flashcard_ids": [1, 3, 5, 7], "updates": { "status": "accepted" } }`
   - **Response JSON**: `{ "updated_count": 3, "failed_count": 1, "results": [{ "flashcard_id": 1, "status": "updated" }, { "flashcard_id": 3, "status": "updated" }, { "flashcard_id": 5, "status": "updated" }, { "flashcard_id": 7, "status": "not_found" }] }`
