@@ -30,7 +30,7 @@ Celem tych operacji jest umożliwienie efektywnego zarządzania fiszkami przy je
 
 - Metoda HTTP: PATCH
 - URL: `/api/flashcards/{flashcard_id}`
-- Request Body: Obiekt umożliwiający częściową aktualizację, np. 
+- Request Body: Obiekt umożliwiający częściową aktualizację, np.
   - `{ "status": "accepted" }` lub
   - `{ "question": "Updated question?", "answer": "Updated answer" }`
 
@@ -73,7 +73,7 @@ Dodatkowo będą wykorzystywane odpowiednie typy błędów:
 
 Poniżej znajduje się struktura odpowiedzi dla poszczególnych operacji:
 
-- **GET /api/flashcards**: 
+- **GET /api/flashcards**:
   - Status: 200 OK
   - Body: `{ "flashcards": [Flashcard, ...], "pagination": { "page": <number>, "limit": <number>, "total": <number>, "total_pages": <number> } }`
 
@@ -128,8 +128,6 @@ Poniższe scenariusze błędów powinny być zaimplementowane:
 
 Każdy błąd powinien być logowany zgodnie z polityką logowania serwera, umożliwiając późniejszą analizę i debugowanie.
 
-
-
 ## 9. Etapy wdrożenia
 
 1. Utworzenie i walidacja nowego endpointu GET /api/flashcards:
@@ -147,8 +145,6 @@ Każdy błąd powinien być logowany zgodnie z polityką logowania serwera, umo�
 4. Implementacja endpointu DELETE /api/flashcards/{flashcard_id}:
    - Weryfikacja istnienia rekordu przed usunięciem
    - Użycie odpowiednich metod bazy danych Supabase
-
-
 
 ---
 

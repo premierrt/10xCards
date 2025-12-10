@@ -1,6 +1,7 @@
 # REST API Plan
 
 ## 1. Resources
+
 - Users: correspond to the `users` table.
 - Flashcards: correspond to the `flashcards` table.
 - Flashcard Sets: correspond to the `flashcard_sets` table.
@@ -8,8 +9,8 @@
 
 ## 2. Endpoints
 
-
 ### Flashcards
+
 - **POST /api/flashcards/generate**
   - Generates flashcards proposal from input text.
   - **Request JSON**: `{ "text": "input text here", "count": 20 }`
@@ -56,6 +57,7 @@
   - **Error Codes**: 400 Bad Request (if no IDs provided or invalid format), 401 Unauthorized
 
 ### Flashcard Sets
+
 - **POST /api/flashcard-sets**
   - Creates a flashcard set with accepted flashcards.
   - **Request JSON**: `{ "user_id": 1, "name": "Unique Set Name", "flashcard_ids": [1, 3, 5] }`
@@ -88,12 +90,12 @@
   - **Success Codes**: 200 OK
   - **Error Codes**: 404 Not Found, 401 Unauthorized
 
-
-
 ## 3. Authentication and Authorization
+
 - Token-based auth using Supabase Auth.
 
 ## 4. Validation and Business Logic
+
 - **User registration**: Validate email uniqueness and password strength.
 - **Flashcard generation**: Validate input text length (1000–10000 words).
 - **Flashcard set uniqueness**: Validate that the set name is unique when creating or updating a set.

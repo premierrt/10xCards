@@ -1,6 +1,7 @@
 # API Endpoint Implementation Plan: Flashcard Sets CRUD
 
 ## 1. Przegląd punktu końcowego
+
 Ten plan obejmuje implementację trzech związanych endpointów interfejsu API do zarządzania zestawami fiszek użytkownika. Endpointy umożliwiają:
 
 - Pobranie listy zestawów fiszek (GET /api/flashcard-sets) z opcjonalnym dołączaniem identyfikatorów fiszek.
@@ -10,6 +11,7 @@ Ten plan obejmuje implementację trzech związanych endpointów interfejsu API d
 ## 2. Szczegóły żądania
 
 ### GET /api/flashcard-sets
+
 - **Metoda HTTP**: GET
 - **URL**: /api/flashcard-sets
 - **Parametry zapytania**:
@@ -18,19 +20,21 @@ Ten plan obejmuje implementację trzech związanych endpointów interfejsu API d
   - `include_flashcards` (opcjonalne, domyślnie `true`, wartości: `true` lub `false`) – decyduje, czy zwrócić listę identyfikatorów fiszek w zestawie
 
 ### GET /api/flashcard-sets/{set_id}
+
 - **Metoda HTTP**: GET
 - **URL**: /api/flashcard-sets/{set_id}
 - **Parametry zapytania**:
   - `include_flashcard_details` (opcjonalne, domyślnie `false`, wartości: `true` lub `false`) – decyduje, czy zwrócić pełne szczegóły fiszek (pytanie i odpowiedź) czy tylko identyfikatory
 
 ### DELETE /api/flashcard-sets/{set_id}
+
 - **Metoda HTTP**: DELETE
 - **URL**: /api/flashcard-sets/{set_id}
 - Nie wymaga dodatkowych parametrów ani body.
 
 ## 3. Wykorzystywane typy (DTO i modele)
 
-- **GetFlashcardSetsResponse**: 
+- **GetFlashcardSetsResponse**:
   - Zawiera: lista elementów typu FlashcardSetListItem oraz metadane paginacji (PaginationInfo).
   - FlashcardSetListItem: identyfikator zestawu, nazwa, liczba fiszek, data utworzenia oraz (opcjonalnie) lista identyfikatorów fiszek, jeżeli `include_flashcards` jest true.
 
@@ -41,16 +45,15 @@ Ten plan obejmuje implementację trzech związanych endpointów interfejsu API d
 - **DeleteFlashcardSetResponse**:
   - Zawiera komunikat potwierdzający usunięcie zestawu.
 
-
 ## 4. Przepływ danych
 
 1. Weryfikacja tożsamości użytkownika (autoryzacja) przy użyciu Supabase Auth.
 2. Walidacja parametrów zapytania przy użyciu Zod lub innej biblioteki walidującej dane.
 3. Pobranie danych z bazy PostgreSQL:
-   - Dla listy zestawów: 
+   - Dla listy zestawów:
      - Wyszukiwanie w tabeli `flashcard_sets` oraz zliczenie powiązanych wpisów w `flashcard_set_flashcards`
      - Jeśli parametr `include_flashcards` jest true, dołączamy listę identyfikatorów powiązanych fiszek.
-   - Dla pojedynczego zestawu: 
+   - Dla pojedynczego zestawu:
      - Weryfikacja, czy zestaw istnieje oraz należy do aktualnie zalogowanego użytkownika.
      - Jeśli `include_flashcard_details` jest true, wykonanie join z tabelą `flashcards`, aby pobrać pytania i odpowiedzi.
 4. Zwrócenie odpowiedniego formatu JSON zgodnego z dokumentacją.
@@ -88,7 +91,7 @@ Ten plan obejmuje implementację trzech związanych endpointów interfejsu API d
    - Walidacja i weryfikacja istnienia zestawu oraz autoryzacja dostępu.
    - Pobranie danych zestawu z bazy danych.
    - W zależności od wartości `include_flashcard_details`, wykonanie:
-     - Zwrócenie listy identyfikatorów fiszek (domyślne), lub 
+     - Zwrócenie listy identyfikatorów fiszek (domyślne), lub
      - Dołączenie szczegółowych danych każdej fiszki (join z tabelą flashcards).
    - Zwrócenie odpowiedniego JSON.
 
@@ -101,4 +104,4 @@ Ten plan obejmuje implementację trzech związanych endpointów interfejsu API d
    - Funkcje do pobierania, szczegółowego pobierania i usuwania zestawów.
    - Ujednolicona walidacja oraz operacje bazodanowe.
 
-7. Aktualizacja dokumentacji API (np. w Swagger/OpenAPI) i komunikacja zmian z zespołem.
+5. Aktualizacja dokumentacji API (np. w Swagger/OpenAPI) i komunikacja zmian z zespołem.

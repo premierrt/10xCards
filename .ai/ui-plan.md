@@ -7,6 +7,7 @@ FlashLearn to minimalistyczna aplikacja webowa dedykowana dla desktop, skupiona 
 ## 2. Lista widoków
 
 ### 2.1 Ekran powitalny (Landing Page)
+
 - **Ścieżka widoku**: `/`
 - **Główny cel**: Prezentacja wartości produktu i konwersja nowych użytkowników
 - **Kluczowe informacje do wyświetlenia**:
@@ -23,6 +24,7 @@ FlashLearn to minimalistyczna aplikacja webowa dedykowana dla desktop, skupiona 
   - Responsywny layout w ramach ograniczonego kontenera
 
 ### 2.2 Widok logowania
+
 - **Ścieżka widoku**: `/login`
 - **Główny cel**: Autoryzacja istniejących użytkowników
 - **Kluczowe informacje do wyświetlenia**:
@@ -41,6 +43,7 @@ FlashLearn to minimalistyczna aplikacja webowa dedykowana dla desktop, skupiona 
   - Autofocus na pierwszym polu
 
 ### 2.3 Widok rejestracji
+
 - **Ścieżka widoku**: `/register`
 - **Główny cel**: Utworzenie nowego konta użytkownika
 - **Kluczowe informacje do wyświetlenia**:
@@ -60,6 +63,7 @@ FlashLearn to minimalistyczna aplikacja webowa dedykowana dla desktop, skupiona 
   - Potwierdzenie zgodności haseł
 
 ### 2.4 Strona główna (Dashboard)
+
 - **Ścieżka widoku**: `/sets`
 - **Główny cel**: Przegląd i zarządzanie zestawami fiszek
 - **Kluczowe informacje do wyświetlenia**:
@@ -80,6 +84,7 @@ FlashLearn to minimalistyczna aplikacja webowa dedykowana dla desktop, skupiona 
   - Wizualne wyróżnienie nowych zestawów
 
 ### 2.5 Generator fiszek
+
 - **Ścieżka widoku**: `/generate`
 - **Główny cel**: Wprowadzenie tekstu i wygenerowanie fiszek
 - **Kluczowe informacje do wyświetlenia**:
@@ -101,6 +106,7 @@ FlashLearn to minimalistyczna aplikacja webowa dedykowana dla desktop, skupiona 
   - Zachowanie tekstu w formularzu
 
 ### 2.6 Przegląd wygenerowanych fiszek
+
 - **Ścieżka widoku**: `/generate` (ten sam widok, zmiana stanu)
 - **Główny cel**: Akceptacja lub odrzucenie wygenerowanych fiszek
 - **Kluczowe informacje do wyświetlenia**:
@@ -120,6 +126,7 @@ FlashLearn to minimalistyczna aplikacja webowa dedykowana dla desktop, skupiona 
   - Możliwość ponownego generowania
 
 ### 2.7 Widok powtórki
+
 - **Ścieżka widoku**: `/review/{setId}`
 - **Główny cel**: Przeprowadzenie sesji powtórki fiszek
 - **Kluczowe informacje do wyświetlenia**:
@@ -140,6 +147,7 @@ FlashLearn to minimalistyczna aplikacja webowa dedykowana dla desktop, skupiona 
   - Reset sesji bez zapisywania przy wyjściu
 
 ### 2.8 Podsumowanie powtórki
+
 - **Ścieżka widoku**: `/review/{setId}/summary`
 - **Główny cel**: Prezentacja statystyk sesji powtórki
 - **Kluczowe informacje do wyświetlenia**:
@@ -157,6 +165,7 @@ FlashLearn to minimalistyczna aplikacja webowa dedykowana dla desktop, skupiona 
 ## 3. Mapa podróży użytkownika
 
 ### 3.1 Pierwsza wizyta (Onboarding)
+
 1. Użytkownik wchodzi na stronę powitalną
 2. Klika "Zarejestruj się"
 3. Wypełnia formularz rejestracji
@@ -166,6 +175,7 @@ FlashLearn to minimalistyczna aplikacja webowa dedykowana dla desktop, skupiona 
 7. Przechodzi do generatora fiszek
 
 ### 3.2 Tworzenie zestawu fiszek
+
 1. Użytkownik wkleja tekst źródłowy
 2. Wybiera liczbę fiszek do wygenerowania
 3. Klika "Wygeneruj fiszki"
@@ -176,6 +186,7 @@ FlashLearn to minimalistyczna aplikacja webowa dedykowana dla desktop, skupiona 
 8. Pozostaje w generatorze z możliwością stworzenia kolejnego zestawu
 
 ### 3.3 Powtórka zestawu
+
 1. Użytkownik wybiera zestaw z listy na stronie głównej
 2. Klika "Powtórz teraz"
 3. Widzi pytanie pierwszej fiszki
@@ -186,6 +197,7 @@ FlashLearn to minimalistyczna aplikacja webowa dedykowana dla desktop, skupiona 
 8. Wraca do listy zestawów
 
 ### 3.4 Powrót użytkownika
+
 1. Użytkownik wchodzi na stronę powitalną
 2. Klika "Zaloguj się"
 3. Wprowadza dane logowania
@@ -195,16 +207,19 @@ FlashLearn to minimalistyczna aplikacja webowa dedykowana dla desktop, skupiona 
 ## 4. Układ i struktura nawigacji
 
 ### 4.1 Minimalna nawigacja
+
 - Brak stałego menu nawigacyjnego
 - Przycisk "← Powrót do zestawów" w widokach szczegółowych
 - Przycisk "Wyloguj" zawsze widoczny w prawym górnym rogu (dla zalogowanych)
 
 ### 4.2 Przepływ między widokami
+
 - Nawigacja oparta na akcjach użytkownika
 - Proste ścieżki URL dla łatwej orientacji
 - Przekierowania po zakończonych akcjach
 
 ### 4.3 Hierarchia widoków
+
 ```
 / (Landing)
 ├── /login
@@ -218,37 +233,45 @@ FlashLearn to minimalistyczna aplikacja webowa dedykowana dla desktop, skupiona 
 ## 5. Kluczowe komponenty
 
 ### 5.1 Przycisk akcji
+
 - Warianty: główny (zielony), drugorzędny (szary), destrukcyjny (czerwony)
 - Używany do wszystkich głównych akcji w aplikacji
 
 ### 5.2 Karta zestawu
+
 - Wyświetla nazwę, liczbę fiszek, datę utworzenia
 - Zawiera przyciski akcji: "Powtórz teraz", "Usuń"
 - Badge "Nowy" dla zestawów bez powtórek
 
 ### 5.3 Formularz z walidacją
+
 - Inline komunikaty błędów
 - Walidacja w czasie rzeczywistym
 - Czytelne etykiety i podpowiedzi
 
 ### 5.4 Modal potwierdzenia
+
 - Używany dla akcji destrukcyjnych
 - Jasny komunikat o konsekwencjach
 - Przyciski: "Anuluj" i "Potwierdź"
 
 ### 5.5 Pasek postępu
+
 - Pokazuje postęp w sesji powtórki
 - Format: "X/Y" gdzie X to aktualna fiszka, Y to całkowita liczba
 
 ### 5.6 Komunikat statusu
+
 - Informacje o sukcesie, błędzie lub ostrzeżeniu
 - Wyświetlany inline lub jako toast
 
 ### 5.7 Pusty stan
+
 - Ilustracja lub ikona
 - Opis sytuacji
 - CTA zachęcające do akcji
 
 ### 5.8 Licznik
+
 - Pokazuje aktualne wykorzystanie limitów
 - Format: "X/200 zestawów" lub "X/10000 fiszek"

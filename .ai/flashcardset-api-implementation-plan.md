@@ -60,8 +60,8 @@ Endpoint POST /api/flashcard-sets jest odpowiedzialny za tworzenie zestawu fisze
 
 ## 6. Względy bezpieczeństwa
 
-- **Uwierzytelnienie i autoryzacja**: 
-  - Upewnij się, że żądanie pochodzi od uwierzytelnionego użytkownika. Użyj mechanizmu uwierzytelniania Supabase (sprawdzenie `context.locals` lub podobnego mechanizmu) 
+- **Uwierzytelnienie i autoryzacja**:
+  - Upewnij się, że żądanie pochodzi od uwierzytelnionego użytkownika. Użyj mechanizmu uwierzytelniania Supabase (sprawdzenie `context.locals` lub podobnego mechanizmu)
   - Waliduj `user_id` w żądaniu, aby potwierdzić, że użytkownik ma prawo tworzyć zestaw fiszek (np. porównaj z danymi uwierzytelnienia)
 
 - **Walidacja danych wejściowych**:
@@ -102,7 +102,7 @@ Każdy błąd powinien być odpowiednio zalogowany oraz opakowany w standardowy 
 
 2. **Walidacja wejściowa**:
    - Implementacja walidacji danych wejściowych przy użyciu Zod zgodnie z typem `CreateFlashcardSetRequest`
-   - Sprawdzenie unikalności nazwy zestawu oraz statusu fiszek 
+   - Sprawdzenie unikalności nazwy zestawu oraz statusu fiszek
 
 3. **Logika serwisowa**:
    - Utworzenie nowego modułu serwisowego w `src/lib/services` (np. flashcardSetService.ts), który zawiera logikę tworzenia zestawu fiszek i powiązanych rekordów
@@ -112,9 +112,6 @@ Każdy błąd powinien być odpowiednio zalogowany oraz opakowany w standardowy 
    - Wykorzystanie Supabase client (zgodnie z zasadami w `backend.mdc`), zwłaszcza poprzez korzystanie z `context.locals`
    - Upewnienie się, że zapytania są zoptymalizowane i korzystają z odpowiednich indeksów
 
-
-6. **Obsługa błędów i logowanie**:
+5. **Obsługa błędów i logowanie**:
    - Implementacja globalnego middleware do obsługi błędów (zgodnie z zasadami z `shared.mdc`)
    - Zapisywanie błędów systemowych do dedykowanego logu
-
-

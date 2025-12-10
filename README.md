@@ -35,6 +35,7 @@ FlashLearn is a web-based learning platform that revolutionizes the flashcard cr
 ## Tech Stack
 
 ### Frontend
+
 - **[Astro](https://astro.build/)** v5 - Modern web framework for fast, content-focused websites
 - **[React](https://react.dev/)** v19 - UI library for interactive components
 - **[TypeScript](https://www.typescriptlang.org/)** v5 - Type-safe JavaScript development
@@ -42,6 +43,7 @@ FlashLearn is a web-based learning platform that revolutionizes the flashcard cr
 - **[shadcn/ui](https://ui.shadcn.com/)** - Accessible component library
 
 ### Backend
+
 - **[Supabase](https://supabase.com/)** - Backend-as-a-Service platform providing:
   - PostgreSQL database
   - User authentication
@@ -49,12 +51,14 @@ FlashLearn is a web-based learning platform that revolutionizes the flashcard cr
   - RESTful APIs
 
 ### AI Integration
+
 - **[OpenRouter.ai](https://openrouter.ai/)** - Multi-model AI gateway providing:
   - Access to various LLMs (OpenAI, Anthropic, Google, etc.)
   - Cost optimization
   - API rate limiting
 
 ### DevOps
+
 - **CI/CD**: GitHub Actions
 - **Hosting**: DigitalOcean (via Docker)
 - **Version Control**: Git/GitHub
@@ -70,41 +74,47 @@ FlashLearn is a web-based learning platform that revolutionizes the flashcard cr
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/premierrt/10xCards.git
    ```
 
 2. **Install Node.js version**
-   
+
    If using nvm:
+
    ```bash
    nvm install
    nvm use
    ```
 
 3. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 4. **Set up environment variables**
-   
+
    Create a `.env` file based on `.env.example`:
+
    ```bash
    cp .env.example .env
    ```
 
    Configure the following variables:
+
    ```env
    # Supabase Configuration
    SUPABASE_URL=your_supabase_project_url
    SUPABASE_ANON_KEY=your_supabase_anon_key
-   
+
    # OpenRouter Configuration
    OPENROUTER_API_KEY=your_openrouter_api_key
    ```
 
 5. **Start the development server**
+
    ```bash
    npm run dev
    ```
@@ -113,21 +123,22 @@ FlashLearn is a web-based learning platform that revolutionizes the flashcard cr
 
 ## Available Scripts
 
-| Script | Description |
-|--------|--------------|
-| `npm run dev` | Start the development server |
-| `npm run build` | Build the application for production |
-| `npm run preview` | Preview the production build locally |
-| `npm run astro` | Run Astro CLI commands |
-| `npm run lint` | Run ESLint to check code quality |
-| `npm run lint:fix` | Automatically fix ESLint issues |
-| `npm run format` | Format code with Prettier |
+| Script             | Description                          |
+| ------------------ | ------------------------------------ |
+| `npm run dev`      | Start the development server         |
+| `npm run build`    | Build the application for production |
+| `npm run preview`  | Preview the production build locally |
+| `npm run astro`    | Run Astro CLI commands               |
+| `npm run lint`     | Run ESLint to check code quality     |
+| `npm run lint:fix` | Automatically fix ESLint issues      |
+| `npm run format`   | Format code with Prettier            |
 
 ## Project Scope
 
 ### MVP Features
 
 #### Flashcard Generation & Management
+
 - Text input support (1,000-10,000 words)
 - AI-generated Q&A format flashcards
 - Automatic content summarization (100-200 characters)
@@ -136,12 +147,14 @@ FlashLearn is a web-based learning platform that revolutionizes the flashcard cr
 - Set deletion functionality
 
 #### Learning System
+
 - Random-order flashcard review
 - Simple Know/Don't Know tracking
 - Session-based repetition for unlearned cards
 - Homepage dashboard with all sets
 
 #### User Management
+
 - Email/password authentication
 - Secure user sessions
 - Personal flashcard library
@@ -174,6 +187,7 @@ This project is currently in the Minimum Viable Product (MVP) stage. The focus i
 ### Roadmap
 
 Future enhancements may include:
+
 - Advanced spaced repetition algorithms
 - Mobile applications
 - Social features and sharing

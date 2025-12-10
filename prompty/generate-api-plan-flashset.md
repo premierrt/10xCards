@@ -6,15 +6,11 @@ Zanim zaczniemy, zapoznaj się z poniższymi informacjami:
 
 <route_api_specification>
 
- 
-
 </route_api_specification>
 
 2. Related database resources:
 
 <related_db_resources>
-
- 
 
 </related_db_resources>
 
@@ -22,23 +18,17 @@ Zanim zaczniemy, zapoznaj się z poniższymi informacjami:
 
 <type_definitions>
 
- 
-
 </type_definitions>
 
 3. Tech stack:
 
 <tech_stack>
 
- 
-
 </tech_stack>
 
 4. Implementation rules:
 
 <implementation_rules>
-
-    
 
 </implementation_rules>
 
@@ -161,3 +151,4 @@ Końcowym wynikiem powinien być dobrze zorganizowany plan wdrożenia w formacie
 Końcowe wyniki powinny składać się wyłącznie z planu wdrożenia w formacie markdown i nie powinny powielać ani powtarzać żadnej pracy wykonanej w sekcji analizy.
 
 Pamiętaj, aby zapisać swój plan wdrożenia jako .ai/view-implementation-plan.md. Upewnij się, że plan jest szczegółowy, przejrzysty i zapewnia kompleksowe wskazówki dla zespołu programistów.
+```

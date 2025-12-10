@@ -26,12 +26,14 @@ This endpoint generates flashcard proposals from input text using AI models via 
 ## 3. Used Types
 
 **Existing Types (from types.ts):**
+
 - `GenerateFlashcardsRequest`: Request DTO interface
 - `GenerateFlashcardsResponse`: Response type alias
 - `GeneratedFlashcard`: Individual flashcard response interface
 - `ApiErrorResponse`: Standard error response structure
 
 **New Types Needed:**
+
 - Zod validation schema for request validation
 - AI service response interfaces
 - Internal service DTOs for AI communication
@@ -39,6 +41,7 @@ This endpoint generates flashcard proposals from input text using AI models via 
 ## 4. Response Details
 
 **Success Response (200 OK):**
+
 ```json
 [
   {
@@ -55,6 +58,7 @@ This endpoint generates flashcard proposals from input text using AI models via 
 ```
 
 **Error Responses:**
+
 - **400 Bad Request:** Invalid input parameters or malformed request
 - **401 Unauthorized:** Missing or invalid authentication
 - **429 Too Many Requests:** Rate limit exceeded
@@ -72,6 +76,7 @@ This endpoint generates flashcard proposals from input text using AI models via 
 8. **Response Formation:** Return array of generated flashcards with IDs
 
 **External Dependencies:**
+
 - OpenRouter.ai API for AI model access
 - Supabase database for flashcard storage
 - Authentication service for user verification
@@ -79,22 +84,26 @@ This endpoint generates flashcard proposals from input text using AI models via 
 ## 6. Security Considerations
 
 **Authentication & Authorization:**
+
 - Require valid user authentication (JWT or session)
 - Extract user_id from authenticated context
 - No additional role-based permissions needed
 
 **Input Validation & Sanitization:**
+
 - Sanitize text input to prevent injection attacks
 - Limit text length to prevent excessive AI costs
 - Validate count parameter bounds
 - Use Zod for comprehensive input validation
 
 **Rate Limiting:**
+
 - Implement per-user rate limiting (e.g., 100 generations per day)
 - Consider IP-based rate limiting for additional protection
 - Store rate limit counters in database or Redis
 
 **API Security:**
+
 - Secure OpenRouter.ai API key in environment variables
 - Use HTTPS for all communications
 - Implement request timeout to prevent hanging requests
@@ -102,26 +111,31 @@ This endpoint generates flashcard proposals from input text using AI models via 
 ## 7. Error Handling
 
 **Validation Errors (400):**
+
 - Empty or missing text parameter
 - Invalid count parameter (negative, zero, or too large)
 - Malformed JSON request body
 
 **Authentication Errors (401):**
+
 - Missing authentication token
 - Invalid or expired token
 - User not found in database
 
 **Rate Limiting Errors (429):**
+
 - Daily generation limit exceeded
 - Too many requests in short timeframe
 
 **Service Errors (500):**
+
 - OpenRouter.ai API unavailable or timeout
 - Database connection failures
 - AI model returns invalid response format
 - Unexpected errors in processing pipeline
 
 **Error Response Format:**
+
 ```json
 {
   "error": "VALIDATION_ERROR",
@@ -133,17 +147,20 @@ This endpoint generates flashcard proposals from input text using AI models via 
 ## 8. Performance Considerations
 
 **Optimization Strategies:**
+
 - Cache common AI prompts and responses
 - Use database connection pooling
 - Implement timeout for AI service calls (30 seconds)
 - Consider streaming responses for large generation counts
 
 **Potential Bottlenecks:**
+
 - AI service response time (typically 5-15 seconds)
 - Database write operations for multiple flashcards
 - Network latency to OpenRouter.ai
 
 **Monitoring:**
+
 - Track AI service response times
 - Monitor database query performance
 - Log generation success/failure rates

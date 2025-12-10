@@ -23,7 +23,7 @@ class LazyRealFlashcardService implements IFlashcardGenerationService {
         try {
           return module.flashcardGenerationService;
         } catch (error) {
-          console.error("Failed to initialize real flashcard service:", error);
+          // Failed to initialize real flashcard service
           throw error;
         }
       });
@@ -43,7 +43,9 @@ class LazyRealFlashcardService implements IFlashcardGenerationService {
  */
 export class FlashcardGenerationFactory {
   // Prevent instantiation
-  private constructor() {}
+  private constructor() {
+    // Factory class - no instantiation allowed
+  }
 
   /**
    * Get the flashcard generation service instance
@@ -59,25 +61,17 @@ export class FlashcardGenerationFactory {
     const isDevelopment = nodeEnv === "development" || import.meta.env.DEV === true;
     const useRealAI = import.meta.env.USE_REAL_AI;
 
-    // Debug logging
-    console.log("🔍 Flashcard Service Factory Debug:", {
-      USE_MOCK_AI: useMockEnv,
-      useMock,
-      hasApiKey,
-      isDevelopment,
-      NODE_ENV: nodeEnv,
-      DEV: import.meta.env.DEV,
-    });
+    // Debug logging omitted in production
 
     // Always use mock service in development unless explicitly disabled
     // OR if explicitly requested
     // OR if no API key is provided
     if (useMock || !hasApiKey || (isDevelopment && useRealAI !== "true")) {
-      console.log("🔧 Using mock flashcard generation service");
+      // Using mock flashcard generation service
       return flashcardGenerationMockService;
     }
 
-    console.log("🤖 Using OpenRouter.ai flashcard generation service");
+    // Using OpenRouter.ai flashcard generation service
     // Return lazy-loaded wrapper to avoid initialization errors
     return new LazyRealFlashcardService();
   }
@@ -99,7 +93,7 @@ export const mockFlashcardService = flashcardGenerationMockService;
  */
 export function getFlashcardService(forceMock = false): IFlashcardGenerationService {
   if (forceMock) {
-    console.log("🔧 Forcing mock flashcard generation service");
+    // Forcing mock flashcard generation service
     return flashcardGenerationMockService;
   }
   return FlashcardGenerationFactory.getService();

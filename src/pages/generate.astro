@@ -1,0 +1,14 @@
+---
+// Check authentication - this should be handled by middleware
+// For now we'll assume the user is authenticated
+
+import Layout from "../layouts/Layout.astro";
+import { GenerateView } from "../components/generate/GenerateView.tsx";
+
+const title = "Generator fiszek - 10xCards";
+const description = "Wygeneruj fiszki automatycznie z tekstu źródłowego";
+---
+
+<Layout title={title} description={description}>
+  <GenerateView client:load />
+</Layout>
