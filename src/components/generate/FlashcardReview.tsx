@@ -18,6 +18,7 @@ interface FlashcardReviewProps {
   onRejectAll: () => void;
   onSetNameChange: (name: string) => void;
   onNameErrorChange: (error: string) => void;
+  onUpdateFlashcard?: (flashcardId: number, question: string, answer: string) => void;
 }
 
 export function FlashcardReview({
@@ -31,6 +32,7 @@ export function FlashcardReview({
   onRejectAll,
   onSetNameChange,
   onNameErrorChange,
+  onUpdateFlashcard,
 }: FlashcardReviewProps) {
   const [isSaving, setIsSaving] = useState(false);
 
@@ -68,7 +70,7 @@ export function FlashcardReview({
       <CardContent className="space-y-6">
         <BulkActions onAcceptAll={onAcceptAll} onRejectAll={onRejectAll} />
 
-        <FlashcardList flashcards={flashcards} onToggle={onToggleFlashcard} />
+        <FlashcardList flashcards={flashcards} onToggle={onToggleFlashcard} onUpdate={onUpdateFlashcard} />
 
         <div className="border-t pt-6">
           <SetNameInput

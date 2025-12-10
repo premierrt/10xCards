@@ -17,6 +17,7 @@ export function GenerateView() {
     setSetName,
     setNameError,
     toggleFlashcard,
+    updateFlashcard,
     acceptAll,
     rejectAll,
     updateFlashcardStatuses,
@@ -98,6 +99,7 @@ export function GenerateView() {
           onSave={handleSave}
           onRegenerate={handleRegenerate}
           onToggleFlashcard={toggleFlashcard}
+          onUpdateFlashcard={updateFlashcard}
           onAcceptAll={acceptAll}
           onRejectAll={rejectAll}
           onSetNameChange={setSetName}

@@ -200,6 +200,13 @@ export function useFlashcardGenerator() {
     );
   }, []);
 
+  // Update flashcard content
+  const updateFlashcard = useCallback((flashcardId: number, question: string, answer: string) => {
+    setGeneratedFlashcards((prev) =>
+      prev.map((flashcard) => (flashcard.flashcard_id === flashcardId ? { ...flashcard, question, answer } : flashcard))
+    );
+  }, []);
+
   // Accept all flashcards
   const acceptAll = useCallback(() => {
     setGeneratedFlashcards((prev) => prev.map((flashcard) => ({ ...flashcard, isAccepted: true })));
@@ -244,6 +251,7 @@ export function useFlashcardGenerator() {
     createFlashcardSet,
     checkSetNameUniqueness,
     toggleFlashcard,
+    updateFlashcard,
     acceptAll,
     rejectAll,
     reset,
