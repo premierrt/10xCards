@@ -118,6 +118,15 @@ Kryteria akceptacji:
 - Użytkownik oznacza każdą fiszkę jako Znam lub Nie znam.
 - Fiszki Znam znikają z sesji.
 
+
+US-008
+Tytuł: Rejestracja konta
+Opis:  Jako użytkownik chcę mieć możliwość rejestracji w sysemie
+  -Wejść na formularz Rejestacja jest ze strony logowania po kliknięciu przycisku "Zarejestruj się"
+  -Forumlarz Rejestracja wymaga podania adresu email, hasła i potwierdzenia hasła.
+  - Po poprawnej rejestracji użytkownik trafia na stronę logowania.
+  - Przy błędnych danych pojawia się komunikat błędu.
+
 ## 6. Metryki sukcesu
 
 - W trakcie pojedynczej sesji generowania co najmniej 75% fiszek zostaje zaakceptowanych.
