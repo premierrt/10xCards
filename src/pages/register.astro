@@ -1,0 +1,18 @@
+---
+import AuthLayout from "../layouts/AuthLayout.astro";
+import { RegisterPage } from "../components/auth/RegisterPage.tsx";
+
+const title = "Rejestracja - FlashLearn";
+const description = "Utwórz nowe konto FlashLearn";
+
+// TODO: Redirect authenticated users to dashboard
+// This will be implemented when backend integration is ready
+// const session = await getSession(Astro.cookies);
+// if (session) {
+//   return Astro.redirect('/dashboard');
+// }
+---
+
+<AuthLayout title={title} description={description}>
+  <RegisterPage client:load />
+</AuthLayout>

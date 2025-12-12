@@ -1,0 +1,49 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const title = "Dashboard - FlashLearn";
+const description = "Zarządzaj swoimi zestawami fiszek";
+
+// TODO: This page should be protected by AuthGuard
+// This will be implemented when backend integration is ready
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p class="text-gray-600 mt-2">Zarządzaj swoimi zestawami fiszek</p>
+        </div>
+        <a href="/generate" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
+          Utwórz nowy zestaw
+        </a>
+      </div>
+
+      <!-- Placeholder content - will be replaced with actual flashcard sets -->
+      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div class="bg-white rounded-lg border p-6 shadow-sm">
+          <h3 class="font-semibold text-gray-900 mb-2">Przykładowy zestaw</h3>
+          <p class="text-gray-600 text-sm mb-4">20 fiszek • Utworzono dzisiaj</p>
+          <div class="flex gap-2">
+            <button class="px-3 py-1 text-xs bg-blue-100 text-blue-800 rounded"> Ćwicz </button>
+            <button class="px-3 py-1 text-xs bg-gray-100 text-gray-800 rounded"> Edytuj </button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg border p-6 shadow-sm opacity-50">
+          <h3 class="font-semibold text-gray-900 mb-2">Pusty zestaw</h3>
+          <p class="text-gray-600 text-sm mb-4">0 fiszek • Utworzono wczoraj</p>
+          <div class="flex gap-2">
+            <button class="px-3 py-1 text-xs bg-gray-100 text-gray-800 rounded" disabled> Dodaj fiszki </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 text-center text-gray-500">
+        <p>To jest strona dashboard - zawartość zostanie zaimplementowana wraz z backendem.</p>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
