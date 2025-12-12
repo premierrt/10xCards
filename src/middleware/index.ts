@@ -1,21 +1,46 @@
 import { defineMiddleware } from "astro:middleware";
+import { createSupabaseServerInstance } from "../db/supabase.client.ts";
 
-import { supabaseClient } from "../db/supabase.client.ts";
-import { createMockSupabaseClient } from "../lib/services/supabase-mock.service";
+// Public paths that don't require authentication
+const PUBLIC_PATHS = ["/", "/login", "/register", "/api/auth/login", "/api/auth/register", "/api/auth/logout"];
 
-export const onRequest = defineMiddleware((context, next) => {
-  // Use mock Supabase client if in mock mode or no real credentials
-  const useMock =
-    import.meta.env.USE_MOCK_AI === "true" ||
-    import.meta.env.USE_MOCK_AI === true ||
-    !import.meta.env.SUPABASE_URL ||
-    import.meta.env.SUPABASE_URL.includes("mock");
+// Protected paths that require authentication
+const PROTECTED_PATHS = ["/generate", "/dashboard"];
 
-  if (useMock) {
-    console.log("🔧 Using mock Supabase client");
-    context.locals.supabase = createMockSupabaseClient();
+export const onRequest = defineMiddleware(async ({ locals, cookies, url, request, redirect }, next) => {
+  // Skip auth check for public paths
+  if (PUBLIC_PATHS.includes(url.pathname)) {
+    return next();
+  }
+
+  const supabase = createSupabaseServerInstance({
+    cookies,
+    headers: request.headers,
+  });
+
+  // Add supabase instance to locals for use in pages
+  locals.supabase = supabase;
+
+  // Get user session
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    // User is authenticated, add to locals
+    locals.user = {
+      email: user.email!,
+      id: user.id,
+    };
   } else {
-    context.locals.supabase = supabaseClient;
+    // Check if this is a protected route
+    const isProtectedRoute = PROTECTED_PATHS.some((path) => url.pathname.startsWith(path));
+
+    if (isProtectedRoute) {
+      // Redirect to login for protected routes
+      return redirect("/login");
+    }
   }
 
   return next();

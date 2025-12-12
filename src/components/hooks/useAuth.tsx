@@ -1,17 +1,7 @@
 import { useState, useEffect, createContext, useContext } from "react";
 import type { ReactNode } from "react";
-
-interface User {
-  id: string;
-  email: string;
-}
-
-interface Session {
-  access_token: string;
-  refresh_token: string;
-  expires_at: number;
-  user: User;
-}
+import { supabaseClient } from "../../db/supabase.client.ts";
+import type { User, Session } from "@supabase/supabase-js";
 
 interface AuthContextType {
   user: User | null;
@@ -33,105 +23,208 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Debug logging
+  console.log("AuthProvider render - loading:", loading, "user:", user?.email);
+
   useEffect(() => {
+    let mounted = true;
+
+    // Safety timeout to ensure loading is set to false
+    const safetyTimeout = setTimeout(() => {
+      if (mounted) {
+        console.log("Safety timeout: setting loading to false");
+        setLoading(false);
+      }
+    }, 3000); // 3 second timeout
+
     // Initialize auth state
-    // This will be replaced with actual Supabase initialization
     const initializeAuth = async () => {
       try {
-        // TODO: Replace with actual Supabase session check
-        // const { data: { session } } = await supabase.auth.getSession();
-        // setSession(session);
-        // setUser(session?.user || null);
+        console.log("Initializing auth state...");
 
-        // For now, simulate loading
-        setTimeout(() => {
+        // Check if Supabase is configured
+        const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || import.meta.env.SUPABASE_URL;
+        const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_KEY || import.meta.env.SUPABASE_KEY;
+
+        console.log("Environment check:", {
+          supabaseUrl: supabaseUrl ? "present" : "missing",
+          supabaseAnonKey: supabaseAnonKey ? "present" : "missing",
+        });
+
+        if (!supabaseUrl || !supabaseAnonKey) {
+          console.warn("Supabase not configured. Auth will be disabled.");
+          if (mounted) {
+            setSession(null);
+            setUser(null);
+            setLoading(false);
+            clearTimeout(safetyTimeout);
+          }
+          return;
+        }
+
+        // Add timeout for the getSession call
+        const sessionPromise = supabaseClient.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Session timeout")), 5000));
+
+        const {
+          data: { session },
+        } = (await Promise.race([sessionPromise, timeoutPromise])) as any;
+
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user || null);
           setLoading(false);
-        }, 1000);
+          clearTimeout(safetyTimeout);
+          console.log("Auth initialized:", session?.user?.email || "no user");
+        }
       } catch (error) {
         console.error("Error initializing auth:", error);
-        setLoading(false);
+        if (mounted) {
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          clearTimeout(safetyTimeout);
+        }
       }
     };
 
     initializeAuth();
 
-    // TODO: Set up auth state change listener
-    // const { data: { subscription } } = supabase.auth.onAuthStateChange(
-    //   (event, session) => {
-    //     setSession(session);
-    //     setUser(session?.user || null);
-    //     setLoading(false);
-    //   }
-    // );
+    // Set up auth state change listener
+    const {
+      data: { subscription },
+    } = supabaseClient.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session?.user?.email);
 
-    // return () => subscription.unsubscribe();
+      if (mounted) {
+        setSession(session);
+        setUser(session?.user || null);
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      clearTimeout(safetyTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    console.log("signIn called, setting loading to true");
+    setLoading(true);
+
     try {
-      setLoading(true);
+      // Check if Supabase is configured
+      const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || import.meta.env.SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_KEY || import.meta.env.SUPABASE_KEY;
 
-      // TODO: Replace with actual Supabase signIn
-      // const { data, error } = await supabase.auth.signInWithPassword({
-      //   email,
-      //   password,
-      // });
+      if (!supabaseUrl || !supabaseAnonKey) {
+        console.log("Supabase not configured");
+        setLoading(false);
+        throw new Error("System autentykacji nie jest skonfigurowany. Skontaktuj się z administratorem.");
+      }
 
-      // if (error) throw error;
+      console.log("Making login API request...");
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const data = await response.json();
+      console.log("Login API response:", response.status, data);
 
-      // For now, throw error to show error handling
-      throw new Error("Nieprawidłowy email lub hasło");
+      if (!response.ok) {
+        console.log("Login failed, setting loading to false");
+        setLoading(false);
+        throw new Error(data.error || "Błąd logowania");
+      }
+
+      console.log("Login successful, redirecting...");
+      // After successful login, redirect to generate page
+      window.location.href = "/generate";
     } catch (error) {
-      throw error;
-    } finally {
+      console.log("Login error, setting loading to false", error);
       setLoading(false);
+      throw error;
     }
   };
 
   const signUp = async (email: string, password: string) => {
+    console.log("signUp called, setting loading to true");
+    setLoading(true);
+
     try {
-      setLoading(true);
+      // Check if Supabase is configured
+      const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || import.meta.env.SUPABASE_URL;
+      const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_KEY || import.meta.env.SUPABASE_KEY;
 
-      // TODO: Replace with actual Supabase signUp
-      // const { data, error } = await supabase.auth.signUp({
-      //   email,
-      //   password,
-      // });
+      if (!supabaseUrl || !supabaseAnonKey) {
+        console.log("Supabase not configured");
+        setLoading(false);
+        throw new Error("System autentykacji nie jest skonfigurowany. Skontaktuj się z administratorem.");
+      }
 
-      // if (error) throw error;
+      console.log("Making register API request...");
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const data = await response.json();
+      console.log("Register API response:", response.status, data);
 
-      // For demo purposes, simulate success
-      console.log("Registration successful for:", email);
+      if (!response.ok) {
+        console.log("Registration failed, setting loading to false");
+        setLoading(false);
+        throw new Error(data.error || "Błąd rejestracji");
+      }
+
+      console.log("Registration successful, redirecting...");
+      // After successful registration, redirect to login page
+      window.location.href = "/login";
     } catch (error) {
-      throw error;
-    } finally {
+      console.log("Registration error, setting loading to false", error);
       setLoading(false);
+      throw error;
     }
   };
 
   const signOut = async () => {
+    setLoading(true);
+
     try {
-      setLoading(true);
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
-      // TODO: Replace with actual Supabase signOut
-      // const { error } = await supabase.auth.signOut();
-      // if (error) throw error;
+      if (!response.ok) {
+        console.error("Logout API error");
+      }
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
+      // Clear local session regardless of API response
+      await supabaseClient.auth.signOut();
       setUser(null);
       setSession(null);
+
+      // Redirect to login page
+      window.location.href = "/login";
     } catch (error) {
-      throw error;
-    } finally {
+      console.error("Logout error:", error);
+      // Still try to clear local state
+      setUser(null);
+      setSession(null);
       setLoading(false);
+      window.location.href = "/login";
     }
   };
 

@@ -10,10 +10,7 @@ export function LoginView() {
     try {
       setError("");
       await signIn(email, password);
-
-      // Redirect to dashboard on successful login
-      // This will be handled by the auth state change in production
-      window.location.href = "/dashboard";
+      // Redirect is handled in the signIn function
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Wystąpił błąd podczas logowania";
       setError(errorMessage);

@@ -8,9 +8,8 @@ interface Props {
 
 const { title = "FlashLearn", description } = Astro.props;
 
-// TODO: Replace with actual Supabase session check
-// This will be implemented when backend integration is ready
-const user = null; // await getUserFromSession(Astro.cookies);
+// Get user from middleware locals
+const user = Astro.locals.user;
 ---
 
 <!doctype html>
@@ -74,14 +73,15 @@ const user = null; // await getUserFromSession(Astro.cookies);
                     {user.email?.[0]?.toUpperCase() || 'U'}
                   </div>
                   <span class="text-sm text-gray-700 hidden sm:block">{user.email}</span>
-                  <!-- Logout button placeholder -->
-                  <button 
-                    type="button"
-                    class="text-sm text-gray-600 hover:text-gray-800 transition-colors"
-                    onclick="/* TODO: Implement logout */"
-                  >
-                    Wyloguj
-                  </button>
+                  <!-- Logout form -->
+                  <form action="/api/auth/logout" method="POST" class="inline">
+                    <button 
+                      type="submit"
+                      class="text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                    >
+                      Wyloguj
+                    </button>
+                  </form>
                 </div>
               </div>
             )}

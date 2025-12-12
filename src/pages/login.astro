@@ -5,12 +5,10 @@ import { LoginPage } from "../components/auth/LoginPage.tsx";
 const title = "Logowanie - FlashLearn";
 const description = "Zaloguj się do swojego konta FlashLearn";
 
-// TODO: Redirect authenticated users to dashboard
-// This will be implemented when backend integration is ready
-// const session = await getSession(Astro.cookies);
-// if (session) {
-//   return Astro.redirect('/dashboard');
-// }
+// Redirect authenticated users to generate page
+if (Astro.locals.user) {
+  return Astro.redirect("/generate");
+}
 ---
 
 <AuthLayout title={title} description={description}>

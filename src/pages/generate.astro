@@ -1,12 +1,15 @@
 ---
-// Check authentication - this should be handled by middleware
-// For now we'll assume the user is authenticated
+// Authentication is handled by middleware
+// User is guaranteed to be authenticated at this point
 
 import Layout from "../layouts/Layout.astro";
 import { GenerateView } from "../components/generate/GenerateView.tsx";
 
 const title = "Generator fiszek - 10xCards";
 const description = "Wygeneruj fiszki automatycznie z tekstu źródłowego";
+
+// Get user from locals (guaranteed by middleware)
+const user = Astro.locals.user!;
 ---
 
 <Layout title={title} description={description}>

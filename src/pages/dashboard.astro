@@ -4,8 +4,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 const title = "Dashboard - FlashLearn";
 const description = "Zarządzaj swoimi zestawami fiszek";
 
-// TODO: This page should be protected by AuthGuard
-// This will be implemented when backend integration is ready
+// Authentication is handled by middleware
+// User is guaranteed to be authenticated at this point
+const user = Astro.locals.user!;
 ---
 
 <BaseLayout title={title} description={description}>
@@ -14,7 +15,7 @@ const description = "Zarządzaj swoimi zestawami fiszek";
       <div class="flex items-center justify-between mb-8">
         <div>
           <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p class="text-gray-600 mt-2">Zarządzaj swoimi zestawami fiszek</p>
+          <p class="text-gray-600 mt-2">Witaj, {user.email}! Zarządzaj swoimi zestawami fiszek</p>
         </div>
         <a href="/generate" class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors">
           Utwórz nowy zestaw
