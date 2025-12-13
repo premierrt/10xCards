@@ -52,3 +52,15 @@ Testing the Fix
 With the development server running, try making a POST request to /api/flashcards/generate and you should now see the mock service being used instead of getting the "OPENROUTER_API_KEY environment variable is required" error.
 
 The mock service will generate contextual flashcards based on your input text and simulate realistic API delays and occasional errors for testing purposes.
+
+
+
+testy:
+
+npm run test           # Unit tests
+npm run test:watch     # Watch mode
+npm run test:ui        # Vitest UI
+npm run test:coverage  # Coverage report
+npm run test:e2e       # E2E tests
+npm run test:e2e:ui    # Playwright UI
+npm run test:all       # All tests
