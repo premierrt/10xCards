@@ -57,11 +57,31 @@ FlashLearn is a web-based learning platform that revolutionizes the flashcard cr
   - Cost optimization
   - API rate limiting
 
+### Testing
+
+#### Unit & Integration Testing
+
+- **[Vitest](https://vitest.dev/)** - Fast unit test framework with native TypeScript support
+- **[React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)** - Testing utilities for React components
+- **[MSW (Mock Service Worker)](https://mswjs.io/)** - API mocking for reliable tests
+- **[Faker.js](https://fakerjs.dev/)** - Generate realistic test data
+
+#### End-to-End Testing
+
+- **[Playwright](https://playwright.dev/)** - Cross-browser automation framework
+- **[Cypress](https://www.cypress.io/)** - Alternative E2E testing tool
+
+#### Performance & Accessibility Testing
+
+- **[Lighthouse](https://developer.chrome.com/docs/lighthouse/overview/)** - Performance and accessibility auditing
+- **[axe DevTools](https://www.deque.com/axe/devtools/)** - Automated accessibility testing
+
 ### DevOps
 
 - **CI/CD**: GitHub Actions
 - **Hosting**: DigitalOcean (via Docker)
 - **Version Control**: Git/GitHub
+- **Error Tracking**: Sentry
 
 ## Getting Started Locally
 
@@ -132,6 +152,10 @@ FlashLearn is a web-based learning platform that revolutionizes the flashcard cr
 | `npm run lint`     | Run ESLint to check code quality     |
 | `npm run lint:fix` | Automatically fix ESLint issues      |
 | `npm run format`   | Format code with Prettier            |
+| `npm run test`     | Run unit tests with Vitest           |
+| `npm run test:ui`  | Run tests with Vitest UI             |
+| `npm run test:e2e` | Run end-to-end tests with Playwright |
+| `npm run test:coverage` | Generate test coverage report   |
 
 ## Project Scope
 
