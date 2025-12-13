@@ -21,9 +21,13 @@ class LazyRealFlashcardService implements IFlashcardGenerationService {
     if (!this.servicePromise) {
       this.servicePromise = import("./flashcard-generation.service").then((module) => {
         try {
+          console.log("🔍 LazyRealFlashcardService: Loaded real service module", {
+            hasFlashcardGenerationService: !!module.flashcardGenerationService,
+            moduleKeys: Object.keys(module),
+          });
           return module.flashcardGenerationService;
         } catch (error) {
-          // Failed to initialize real flashcard service
+          console.error("❌ LazyRealFlashcardService: Failed to initialize real flashcard service", error);
           throw error;
         }
       });
@@ -32,7 +36,12 @@ class LazyRealFlashcardService implements IFlashcardGenerationService {
   }
 
   async generateFlashcards(text: string, count: number): Promise<AIGeneratedFlashcard[]> {
+    console.log("🔍 LazyRealFlashcardService: Generating flashcards with real service");
     const service = await this.getService();
+    console.log("🔍 LazyRealFlashcardService: Got service instance", {
+      serviceType: service.constructor.name,
+      isRealService: service !== flashcardGenerationMockService,
+    });
     return service.generateFlashcards(text, count);
   }
 }
@@ -60,13 +69,27 @@ export class FlashcardGenerationFactory {
     const nodeEnv = import.meta.env.NODE_ENV;
     const isDevelopment = nodeEnv === "development" || import.meta.env.DEV === true;
     const useRealAI = import.meta.env.USE_REAL_AI;
+    const useRealAINormalized = useRealAI === "true" || useRealAI === true;
 
-    // Debug logging omitted in production
+    // Debug logging to diagnose service selection
+    console.log("🔍 Flashcard Service Selection Debug:", {
+      useMockEnv: useMockEnv,
+      useMockEnvType: typeof useMockEnv,
+      useMock: useMock,
+      apiKey: apiKey ? `${apiKey.substring(0, 10)}...` : "NOT_SET",
+      hasApiKey: hasApiKey,
+      nodeEnv: nodeEnv,
+      isDevelopment: isDevelopment,
+      useRealAI: useRealAI,
+      useRealAIType: typeof useRealAI,
+      finalCondition: useMock || !hasApiKey || (isDevelopment && useRealAI !== "true"),
+    });
 
     // Always use mock service in development unless explicitly disabled
     // OR if explicitly requested
     // OR if no API key is provided
-    if (useMock || !hasApiKey || (isDevelopment && useRealAI !== "true")) {
+    // Simplified condition: use mock only if explicitly requested OR no API key
+    if (useMock || !hasApiKey) {
       // Using mock flashcard generation service
       return flashcardGenerationMockService;
     }

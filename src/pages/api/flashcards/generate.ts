@@ -22,6 +22,8 @@ export const prerender = false;
  * Generates flashcards from input text using AI models via OpenRouter.ai
  */
 export const POST: APIRoute = async ({ request, locals }) => {
+  console.log("🚀 [FLASHCARD GENERATE] Starting request...");
+
   try {
     // Authentication check - verify user is authenticated
     const supabase = locals.supabase;
@@ -59,13 +61,50 @@ export const POST: APIRoute = async ({ request, locals }) => {
     let requestBody: GenerateFlashcardsRequest;
     try {
       const rawBody = await request.json();
+      console.log("📝 [FLASHCARD GENERATE] Raw request body:", {
+        textLength: typeof rawBody.text === "string" ? rawBody.text.length : "NOT_STRING",
+        textType: typeof rawBody.text,
+        count: rawBody.count,
+        countType: typeof rawBody.count,
+        hasText: !!rawBody.text,
+        textPreview: typeof rawBody.text === "string" ? rawBody.text.substring(0, 100) + "..." : rawBody.text,
+      });
+
+      // Count words in the text
+      if (typeof rawBody.text === "string") {
+        const wordCount = rawBody.text
+          .trim()
+          .split(/\s+/)
+          .filter((word) => word.length > 0).length;
+        console.log("📊 [FLASHCARD GENERATE] Text analysis:", {
+          characterCount: rawBody.text.length,
+          characterCountTrimmed: rawBody.text.trim().length,
+          wordCount: wordCount,
+          avgWordsPerChar: wordCount / rawBody.text.length,
+        });
+      }
+
       requestBody = generateFlashcardsSchema.parse(rawBody);
+      console.log("✅ [FLASHCARD GENERATE] Validation passed successfully");
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.error("❌ [FLASHCARD GENERATE] Zod validation error:", {
+          errorCount: error.errors.length,
+          errors: error.errors.map((e) => ({
+            path: e.path,
+            message: e.message,
+            code: e.code,
+            received: e.received,
+          })),
+        });
+
+        const errorMessage = error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ");
+        console.error("❌ [FLASHCARD GENERATE] Formatted error message:", errorMessage);
+
         return new Response(
           JSON.stringify({
             error: "VALIDATION_ERROR",
-            message: error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join(", "),
+            message: errorMessage,
             statusCode: 400,
           } as ApiErrorResponse),
           {
@@ -74,6 +113,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
           }
         );
       }
+
+      console.error("❌ [FLASHCARD GENERATE] JSON parsing error:", error);
 
       return new Response(
         JSON.stringify({
@@ -90,6 +131,13 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     const { text, count } = requestBody;
 
+    console.log("📋 [FLASHCARD GENERATE] Final validated data:", {
+      textLength: text.length,
+      wordCount: text.split(/\s+/).filter((word) => word.length > 0).length,
+      count: count,
+      userId: userId,
+    });
+
     // TODO: Implement rate limiting check here
     // Rate limiting will be implemented in next steps
 
@@ -98,18 +146,33 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const url = new URL(request.url);
     const forceMock = url.searchParams.get("mock") === "true" || request.headers.get("X-Use-Mock") === "true";
 
-    // In development, default to mock unless explicitly disabled
-    const shouldUseMock = forceMock || (isDevelopment && url.searchParams.get("mock") !== "false");
+    // Use factory service by default, only override if explicitly requested
+    const serviceToUse = forceMock ? getFlashcardService(true) : flashcardService;
 
-    const serviceToUse = shouldUseMock ? getFlashcardService(true) : flashcardService;
-
-    console.log("🗣️ API using service:", shouldUseMock ? "MOCK" : "REAL");
+    console.log("🗣️ [FLASHCARD GENERATE] Service selection:", {
+      forceMock,
+      isDevelopment,
+      service: forceMock ? "MOCK (forced)" : "FACTORY (auto-selected)",
+      factoryWillChoose: "See factory debug logs above",
+    });
 
     let aiGeneratedFlashcards;
     try {
+      console.log("🤖 [FLASHCARD GENERATE] Starting AI generation...");
       aiGeneratedFlashcards = await serviceToUse.generateFlashcards(text, count);
+      console.log("✅ [FLASHCARD GENERATE] AI generation completed:", {
+        flashcardsCount: aiGeneratedFlashcards.length,
+        flashcardsPreview: aiGeneratedFlashcards.slice(0, 2),
+      });
     } catch (error) {
+      console.error("❌ [FLASHCARD GENERATE] AI generation error:", error);
+
       if (error instanceof FlashcardGenerationError) {
+        console.error("❌ [FLASHCARD GENERATE] FlashcardGenerationError details:", {
+          message: error.message,
+          statusCode: error.statusCode,
+        });
+
         return new Response(
           JSON.stringify({
             error: "GENERATION_ERROR",
@@ -142,9 +205,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
     // Save generated flashcards to database
     let savedFlashcards: GeneratedFlashcard[];
     try {
+      console.log("💾 [FLASHCARD GENERATE] Starting database save...");
       savedFlashcards = await saveFlashcardsToDatabase(supabase, aiGeneratedFlashcards);
+      console.log("✅ [FLASHCARD GENERATE] Database save completed:", {
+        savedCount: savedFlashcards.length,
+        savedIds: savedFlashcards.map((f) => f.flashcard_id),
+      });
     } catch (error) {
-      console.error("Database error while saving flashcards:", error);
+      console.error("❌ [FLASHCARD GENERATE] Database error while saving flashcards:", error);
 
       return new Response(
         JSON.stringify({
@@ -162,13 +230,18 @@ export const POST: APIRoute = async ({ request, locals }) => {
     // Return successful response
     const response: GenerateFlashcardsResponse = savedFlashcards;
 
+    console.log("🎉 [FLASHCARD GENERATE] Request completed successfully:", {
+      responseCount: response.length,
+      responseSize: JSON.stringify(response).length,
+    });
+
     return new Response(JSON.stringify(response), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     // Catch-all error handler for unexpected errors
-    console.error("Unhandled error in generate flashcards endpoint:", error);
+    console.error("❌ [FLASHCARD GENERATE] Unhandled error in generate flashcards endpoint:", error);
 
     return new Response(
       JSON.stringify({

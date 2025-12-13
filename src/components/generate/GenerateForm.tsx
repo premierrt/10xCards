@@ -25,17 +25,28 @@ export function GenerateForm({ onGenerate, isLoading = false, initialText = "", 
   const [textError, setTextError] = useState<string>("");
 
   const validateText = (text: string): string => {
-    const wordCount = text
-      .trim()
-      .split(/\s+/)
-      .filter((word) => word.length > 0).length;
+    const trimmedText = text.trim();
+    const wordCount = trimmedText.split(/\s+/).filter((word) => word.length > 0).length;
+
+    console.log("📊 [FORM VALIDATION] Text analysis:", {
+      originalLength: text.length,
+      trimmedLength: trimmedText.length,
+      wordCount: wordCount,
+      firstWords: trimmedText.split(/\s+/).slice(0, 10).join(" ") + "...",
+    });
 
     if (wordCount < 1000) {
-      return "Tekst musi zawierać minimum 1000 słów";
+      const errorMsg = "Tekst musi zawierać minimum 1000 słów";
+      console.warn("⚠️ [FORM VALIDATION] Validation failed:", errorMsg, { wordCount });
+      return errorMsg;
     }
     if (wordCount > 10000) {
-      return "Tekst nie może przekraczać 10000 słów";
+      const errorMsg = "Tekst nie może przekraczać 10000 słów";
+      console.warn("⚠️ [FORM VALIDATION] Validation failed:", errorMsg, { wordCount });
+      return errorMsg;
     }
+
+    console.log("✅ [FORM VALIDATION] Text validation passed");
     return "";
   };
 
@@ -58,15 +69,26 @@ export function GenerateForm({ onGenerate, isLoading = false, initialText = "", 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log("🚀 [FORM SUBMIT] Form submission started:", {
+      textLength: formData.text.length,
+      count: formData.count,
+      hasText: !!formData.text.trim(),
+    });
+
     const textValidationError = validateText(formData.text);
     if (textValidationError) {
+      console.error("❌ [FORM SUBMIT] Form validation failed:", textValidationError);
       setTextError(textValidationError);
       return;
     }
 
+    console.log("✅ [FORM SUBMIT] Form validation passed, calling onGenerate...");
+
     try {
       await onGenerate(formData.text, formData.count);
+      console.log("✅ [FORM SUBMIT] onGenerate completed successfully");
     } catch (error) {
+      console.error("❌ [FORM SUBMIT] onGenerate failed:", error);
       // Error handling is now done in the hook
       // Form submission error
     }

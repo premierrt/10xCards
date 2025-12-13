@@ -19,6 +19,13 @@ export function useFlashcardGenerator() {
 
   // Generowanie fiszek
   const generateFlashcards = useCallback(async (text: string, count: number) => {
+    console.log("🚀 [FRONTEND] Starting flashcard generation:", {
+      textLength: text.length,
+      wordCount: text.split(/\s+/).filter((word) => word.length > 0).length,
+      count: count,
+      timestamp: new Date().toISOString(),
+    });
+
     // Update form data
     setFormData({ text, count });
     setGeneration({ isLoading: true, timeoutError: false, error: undefined });
@@ -29,13 +36,28 @@ export function useFlashcardGenerator() {
       const controller = new AbortController();
       timeoutId = window.setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
+      const requestPayload = { text, count };
+      console.log("📤 [FRONTEND] Sending request to API:", {
+        url: "/api/flashcards/generate",
+        method: "POST",
+        payloadSize: JSON.stringify(requestPayload).length,
+        headers: { "Content-Type": "application/json" },
+      });
+
       const response = await fetch("/api/flashcards/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ text, count }),
+        body: JSON.stringify(requestPayload),
         signal: controller.signal,
+      });
+
+      console.log("📥 [FRONTEND] Received response:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries()),
       });
 
       if (timeoutId) {
@@ -43,16 +65,35 @@ export function useFlashcardGenerator() {
       }
 
       if (!response.ok) {
+        console.error("❌ [FRONTEND] Response not OK:", {
+          status: response.status,
+          statusText: response.statusText,
+        });
+
         if (response.status === 401) {
+          console.log("🔒 [FRONTEND] Unauthorized - redirecting to login");
           window.location.href = "/login";
           return;
         }
 
-        const errorData = await response.json().catch(() => ({}));
+        let errorData;
+        try {
+          errorData = await response.json();
+          console.error("❌ [FRONTEND] Error response data:", errorData);
+        } catch (jsonError) {
+          console.error("❌ [FRONTEND] Failed to parse error response as JSON:", jsonError);
+          errorData = {};
+        }
+
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       const flashcards: GeneratedFlashcard[] = await response.json();
+      console.log("✅ [FRONTEND] Successfully parsed response data:", {
+        flashcardsCount: flashcards.length,
+        flashcardsPreview: flashcards.slice(0, 2),
+      });
+
       const flashcardsWithStatus: FlashcardWithStatus[] = flashcards.map((flashcard) => ({
         ...flashcard,
         isAccepted: true, // Default to accepted
@@ -61,18 +102,27 @@ export function useFlashcardGenerator() {
       setGeneratedFlashcards(flashcardsWithStatus);
       setViewState("review");
       setGeneration({ isLoading: false, timeoutError: false, error: undefined });
+
+      console.log("🎉 [FRONTEND] Flashcard generation completed successfully");
     } catch (error) {
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
 
       if (error instanceof DOMException && error.name === "AbortError") {
+        console.error("⏰ [FRONTEND] Request timeout:", error);
         setGeneration({
           isLoading: false,
           timeoutError: true,
           error: "Generowanie fiszek trwa zbyt długo. Spróbuj ponownie z krótszym tekstem.",
         });
       } else if (error instanceof Error) {
+        console.error("❌ [FRONTEND] Error during generation:", {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+        });
+
         let errorMessage = error.message;
 
         // Handle common HTTP errors
@@ -88,6 +138,7 @@ export function useFlashcardGenerator() {
           error: errorMessage,
         });
       } else {
+        console.error("❌ [FRONTEND] Unknown error type:", error);
         setGeneration({
           isLoading: false,
           timeoutError: false,
