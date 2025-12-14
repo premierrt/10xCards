@@ -1,0 +1,366 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import type { GetSingleFlashcardSetResponse, FlashcardDetails } from "../../types";
+import { createFlashcardSetService } from "../../lib/services/flashcard-set.service";
+
+const title = "Ćwicz fiszki - FlashLearn";
+const description = "Ćwicz swoje fiszki";
+
+// Authentication is handled by middleware
+const user = Astro.locals.user!;
+const supabase = Astro.locals.supabase;
+
+const { set_id } = Astro.params;
+let flashcardSet: GetSingleFlashcardSetResponse | null = null;
+let error: string | null = null;
+
+if (!set_id || isNaN(Number(set_id))) {
+  error = "Nieprawidłowy identyfikator zestawu";
+} else {
+  try {
+    const flashcardSetService = createFlashcardSetService(supabase);
+    flashcardSet = await flashcardSetService.getSingleFlashcardSet(user.id, Number(set_id), true);
+  } catch (e) {
+    error = 'Wystąpił błąd podczas pobierania zestawu fiszek';
+    console.error('Practice page fetch error:', e);
+  }
+}
+
+const flashcardDetails = flashcardSet?.flashcards as FlashcardDetails[] | undefined;
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="container mx-auto px-4 py-8">
+    <div class="max-w-2xl mx-auto">
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+          {flashcardSet ? flashcardSet.name : 'Ćwicz fiszki'}
+        </h1>
+        <p class="text-gray-600">
+          {flashcardSet ? `${flashcardSet.flashcard_count} fiszek do nauki` : ''}
+        </p>
+        <a 
+          href="/dashboard" 
+          class="inline-block mt-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+        >
+          ← Powrót do Dashboard
+        </a>
+      </div>
+
+      <!-- Error state -->
+      {error && (
+        <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+          <p class="text-red-800">{error}</p>
+          <a href="/dashboard" class="text-red-600 underline mt-2 inline-block">
+            Wróć do Dashboard
+          </a>
+        </div>
+      )}
+
+      <!-- Empty state -->
+      {flashcardSet && flashcardDetails && flashcardDetails.length === 0 && (
+        <div class="text-center py-12">
+          <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-medium text-gray-900 mb-2">Brak fiszek do ćwiczeń</h3>
+          <p class="text-gray-500 mb-4">Ten zestaw nie zawiera żadnych fiszek.</p>
+          <div class="space-x-4">
+            <a 
+              href={`/edit/${set_id}`}
+              class="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+            >
+              Dodaj fiszki
+            </a>
+            <a 
+              href="/generate"
+              class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+            >
+              Wygeneruj nowe fiszki
+            </a>
+          </div>
+        </div>
+      )}
+
+      <!-- Practice Interface -->
+      {flashcardSet && flashcardDetails && flashcardDetails.length > 0 && (
+        <div id="practice-interface">
+          <!-- Progress Bar -->
+          <div class="mb-8">
+            <div class="flex justify-between text-sm text-gray-600 mb-2">
+              <span id="progress-text">Fiszka 1 z {flashcardDetails.length}</span>
+              <span id="score-text">Wynik: 0/{flashcardDetails.length}</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                id="progress-bar" 
+                class="bg-primary h-2 rounded-full transition-all duration-300" 
+                style="width: 0%"
+              ></div>
+            </div>
+          </div>
+
+          <!-- Flashcard -->
+          <div id="flashcard-container" class="mb-8">
+            <div id="flashcard" class="bg-white rounded-lg border-2 shadow-lg min-h-[300px] flex items-center justify-center cursor-pointer transition-transform hover:scale-105 active:scale-95">
+              <div id="flashcard-content" class="text-center p-8">
+                <div id="flashcard-question" class="text-xl font-semibold text-gray-900 mb-4">
+                  <!-- Question will be inserted here -->
+                </div>
+                <div id="flashcard-answer" class="text-lg text-gray-700 hidden">
+                  <!-- Answer will be inserted here -->
+                </div>
+                <p id="flip-hint" class="text-sm text-gray-500 mt-4">
+                  Kliknij, aby zobaczyć odpowiedź
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Control Buttons -->
+          <div class="flex justify-center space-x-4" id="control-buttons">
+            <!-- Question state buttons -->
+            <div id="question-buttons" class="flex space-x-4">
+              <button 
+                id="show-answer-btn"
+                class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                Pokaż odpowiedź
+              </button>
+            </div>
+
+            <!-- Answer state buttons -->
+            <div id="answer-buttons" class="hidden flex space-x-4">
+              <button 
+                id="correct-btn"
+                class="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+              >
+                ✓ Poprawna
+              </button>
+              <button 
+                id="incorrect-btn"
+                class="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                ✗ Niepoprawna
+              </button>
+            </div>
+          </div>
+
+          <!-- Practice Complete Modal -->
+          <div id="complete-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+              <div class="text-center">
+                <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                  <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Świetna robota!</h3>
+                <p class="text-gray-600 mb-4">Ukończyłeś ćwiczenie fiszek.</p>
+                <p id="final-score" class="text-lg font-semibold text-gray-900 mb-6">
+                  <!-- Final score will be inserted here -->
+                </p>
+                <div class="flex space-x-4">
+                  <button 
+                    id="practice-again-btn"
+                    class="flex-1 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+                  >
+                    Ćwicz ponownie
+                  </button>
+                  <a 
+                    href="/dashboard"
+                    class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-center"
+                  >
+                    Dashboard
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+</BaseLayout>
+
+<script define:vars={{ flashcardDetails }}>
+  if (flashcardDetails && flashcardDetails.length > 0) {
+    class FlashcardPractice {
+      constructor(flashcards) {
+        this.flashcards = flashcards;
+        this.currentIndex = 0;
+        this.correctCount = 0;
+        this.showingAnswer = false;
+        
+        this.initializeElements();
+        this.initializeEventListeners();
+        this.showCurrentFlashcard();
+      }
+      
+      initializeElements() {
+        this.flashcard = document.getElementById('flashcard');
+        this.questionEl = document.getElementById('flashcard-question');
+        this.answerEl = document.getElementById('flashcard-answer');
+        this.flipHint = document.getElementById('flip-hint');
+        this.progressText = document.getElementById('progress-text');
+        this.scoreText = document.getElementById('score-text');
+        this.progressBar = document.getElementById('progress-bar');
+        
+        this.questionButtons = document.getElementById('question-buttons');
+        this.answerButtons = document.getElementById('answer-buttons');
+        this.showAnswerBtn = document.getElementById('show-answer-btn');
+        this.correctBtn = document.getElementById('correct-btn');
+        this.incorrectBtn = document.getElementById('incorrect-btn');
+        
+        this.completeModal = document.getElementById('complete-modal');
+        this.finalScore = document.getElementById('final-score');
+        this.practiceAgainBtn = document.getElementById('practice-again-btn');
+      }
+      
+      initializeEventListeners() {
+        // Flashcard click to flip
+        this.flashcard.addEventListener('click', () => {
+          if (!this.showingAnswer) {
+            this.showAnswer();
+          }
+        });
+        
+        // Show answer button
+        this.showAnswerBtn.addEventListener('click', () => {
+          this.showAnswer();
+        });
+        
+        // Correct button
+        this.correctBtn.addEventListener('click', () => {
+          this.markCorrect();
+        });
+        
+        // Incorrect button
+        this.incorrectBtn.addEventListener('click', () => {
+          this.markIncorrect();
+        });
+        
+        // Practice again button
+        this.practiceAgainBtn.addEventListener('click', () => {
+          this.restartPractice();
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+          if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            if (!this.showingAnswer) {
+              this.showAnswer();
+            }
+          } else if (e.key === 'ArrowRight' || e.key === 'y' || e.key === 'Y') {
+            if (this.showingAnswer) {
+              this.markCorrect();
+            }
+          } else if (e.key === 'ArrowLeft' || e.key === 'n' || e.key === 'N') {
+            if (this.showingAnswer) {
+              this.markIncorrect();
+            }
+          }
+        });
+      }
+      
+      showCurrentFlashcard() {
+        const current = this.flashcards[this.currentIndex];
+        this.questionEl.textContent = current.question;
+        this.answerEl.textContent = current.answer;
+        
+        // Reset state
+        this.showingAnswer = false;
+        this.answerEl.classList.add('hidden');
+        this.flipHint.classList.remove('hidden');
+        this.questionButtons.classList.remove('hidden');
+        this.answerButtons.classList.add('hidden');
+        
+        // Update progress
+        this.updateProgress();
+        
+        // Reset flashcard styling
+        this.flashcard.classList.remove('border-green-500', 'border-red-500');
+        this.flashcard.classList.add('border-gray-200');
+      }
+      
+      showAnswer() {
+        this.showingAnswer = true;
+        this.answerEl.classList.remove('hidden');
+        this.flipHint.classList.add('hidden');
+        this.questionButtons.classList.add('hidden');
+        this.answerButtons.classList.remove('hidden');
+      }
+      
+      markCorrect() {
+        this.correctCount++;
+        this.flashcard.classList.remove('border-gray-200', 'border-red-500');
+        this.flashcard.classList.add('border-green-500');
+        this.nextFlashcard();
+      }
+      
+      markIncorrect() {
+        this.flashcard.classList.remove('border-gray-200', 'border-green-500');
+        this.flashcard.classList.add('border-red-500');
+        this.nextFlashcard();
+      }
+      
+      nextFlashcard() {
+        setTimeout(() => {
+          this.currentIndex++;
+          
+          if (this.currentIndex >= this.flashcards.length) {
+            this.completePractice();
+          } else {
+            this.showCurrentFlashcard();
+          }
+        }, 1000);
+      }
+      
+      updateProgress() {
+        const progress = (this.currentIndex / this.flashcards.length) * 100;
+        this.progressBar.style.width = `${progress}%`;
+        this.progressText.textContent = `Fiszka ${this.currentIndex + 1} z ${this.flashcards.length}`;
+        this.scoreText.textContent = `Wynik: ${this.correctCount}/${this.flashcards.length}`;
+      }
+      
+      completePractice() {
+        const percentage = Math.round((this.correctCount / this.flashcards.length) * 100);
+        this.finalScore.textContent = `Twój wynik: ${this.correctCount}/${this.flashcards.length} (${percentage}%)`;
+        this.completeModal.classList.remove('hidden');
+      }
+      
+      restartPractice() {
+        this.currentIndex = 0;
+        this.correctCount = 0;
+        this.showingAnswer = false;
+        this.completeModal.classList.add('hidden');
+        this.showCurrentFlashcard();
+      }
+    }
+    
+    // Initialize practice when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      new FlashcardPractice(flashcardDetails);
+    });
+  }
+</script>
+
+<style>
+  #flashcard {
+    transition: border-color 0.3s ease;
+  }
+  
+  #flashcard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  }
+  
+  .hidden {
+    display: none;
+  }
+</style>
+</BaseLayout>

@@ -5,7 +5,7 @@ import { createSupabaseServerInstance } from "../db/supabase.client.ts";
 const PUBLIC_PATHS = ["/", "/login", "/register", "/api/auth/login", "/api/auth/register", "/api/auth/logout"];
 
 // Protected paths that require authentication
-const PROTECTED_PATHS = ["/generate", "/dashboard"];
+const PROTECTED_PATHS = ["/generate", "/dashboard", "/edit", "/practice"];
 
 export const onRequest = defineMiddleware(async ({ locals, cookies, url, request, redirect }, next) => {
   // Skip auth check for public paths

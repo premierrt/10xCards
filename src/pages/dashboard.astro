@@ -1,5 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import type { FlashcardSetListItem } from "../types";
+import { createFlashcardSetService } from "../lib/services/flashcard-set.service";
 
 const title = "Dashboard - FlashLearn";
 const description = "Zarządzaj swoimi zestawami fiszek";
@@ -7,6 +9,20 @@ const description = "Zarządzaj swoimi zestawami fiszek";
 // Authentication is handled by middleware
 // User is guaranteed to be authenticated at this point
 const user = Astro.locals.user!;
+const supabase = Astro.locals.supabase;
+
+// Fetch user's flashcard sets
+let flashcardSets: FlashcardSetListItem[] = [];
+let error: string | null = null;
+
+try {
+  const flashcardSetService = createFlashcardSetService(supabase);
+  const result = await flashcardSetService.getFlashcardSets(user.id, 1, 20, false);
+  flashcardSets = result.sets;
+} catch (e) {
+  error = "Wystąpił błąd podczas pobierania zestawów fiszek";
+  console.error("Dashboard fetch error:", e);
+}
 ---
 
 <BaseLayout title={title} description={description}>
@@ -22,29 +38,129 @@ const user = Astro.locals.user!;
         </a>
       </div>
 
-      <!-- Placeholder content - will be replaced with actual flashcard sets -->
-      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div class="bg-white rounded-lg border p-6 shadow-sm">
-          <h3 class="font-semibold text-gray-900 mb-2">Przykładowy zestaw</h3>
-          <p class="text-gray-600 text-sm mb-4">20 fiszek • Utworzono dzisiaj</p>
-          <div class="flex gap-2">
-            <button class="px-3 py-1 text-xs bg-blue-100 text-blue-800 rounded"> Ćwicz </button>
-            <button class="px-3 py-1 text-xs bg-gray-100 text-gray-800 rounded"> Edytuj </button>
+      <!-- Error state -->
+      {
+        error && (
+          <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+            <p class="text-red-800 text-sm">{error}</p>
           </div>
-        </div>
+        )
+      }
 
-        <div class="bg-white rounded-lg border p-6 shadow-sm opacity-50">
-          <h3 class="font-semibold text-gray-900 mb-2">Pusty zestaw</h3>
-          <p class="text-gray-600 text-sm mb-4">0 fiszek • Utworzono wczoraj</p>
-          <div class="flex gap-2">
-            <button class="px-3 py-1 text-xs bg-gray-100 text-gray-800 rounded" disabled> Dodaj fiszki </button>
+      <!-- Flashcard Sets Grid -->
+      {
+        flashcardSets.length > 0 ? (
+          <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {flashcardSets.map((set) => {
+              const createdDate = new Date(set.created_at).toLocaleDateString("pl-PL");
+              const flashcardCountText =
+                set.flashcard_count === 1
+                  ? "1 fiszka"
+                  : set.flashcard_count < 5
+                    ? `${set.flashcard_count} fiszki`
+                    : `${set.flashcard_count} fiszek`;
+
+              return (
+                <div class="bg-white rounded-lg border p-6 shadow-sm hover:shadow-md transition-shadow">
+                  <h3 class="font-semibold text-gray-900 mb-2 truncate" title={set.name}>
+                    {set.name}
+                  </h3>
+                  <p class="text-gray-600 text-sm mb-4">
+                    {flashcardCountText} • Utworzono {createdDate}
+                  </p>
+                  <div class="flex gap-2">
+                    {set.flashcard_count > 0 ? (
+                      <>
+                        <a
+                          href={`/practice/${set.set_id}`}
+                          class="px-3 py-1 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
+                        >
+                          Ćwicz
+                        </a>
+                        <a
+                          href={`/edit/${set.set_id}`}
+                          class="px-3 py-1 text-xs bg-gray-100 text-gray-800 rounded hover:bg-gray-200 transition-colors"
+                        >
+                          Edytuj
+                        </a>
+                        <button
+                          class="px-3 py-1 text-xs bg-red-100 text-red-800 rounded hover:bg-red-200 transition-colors delete-set-btn"
+                          data-set-id={set.set_id}
+                          data-set-name={set.name}
+                        >
+                          Usuń
+                        </button>
+                      </>
+                    ) : (
+                      <span class="px-3 py-1 text-xs bg-gray-100 text-gray-500 rounded">Pusty zestaw</span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </div>
-      </div>
-
-      <div class="mt-8 text-center text-gray-500">
-        <p>To jest strona dashboard - zawartość zostanie zaimplementowana wraz z backendem.</p>
-      </div>
+        ) : (
+          !error && (
+            <div class="text-center py-12">
+              <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+              </div>
+              <h3 class="text-lg font-medium text-gray-900 mb-2">Brak zestawów fiszek</h3>
+              <p class="text-gray-500 mb-4">Utworz swój pierwszy zestaw fiszek, aby zacząć naukę</p>
+              <a
+                href="/generate"
+                class="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+              >
+                Utwórz pierwszy zestaw
+              </a>
+            </div>
+          )
+        )
+      }
     </div>
   </div>
 </BaseLayout>
+
+<script>
+  // Handle delete flashcard set
+  document.addEventListener("DOMContentLoaded", function () {
+    const deleteButtons = document.querySelectorAll(".delete-set-btn");
+
+    deleteButtons.forEach((button) => {
+      button.addEventListener("click", async function (e) {
+        e.preventDefault();
+
+        const setId = this.dataset.setId;
+        const setName = this.dataset.setName;
+
+        if (!confirm(`Czy na pewno chcesz usunąć zestaw "${setName}"? Ta akcja jest nieodwracalna.`)) {
+          return;
+        }
+
+        try {
+          const response = await fetch(`/api/flashcard-sets/${setId}`, {
+            method: "DELETE",
+          });
+
+          if (response.ok) {
+            // Reload the page to show updated list
+            window.location.reload();
+          } else {
+            const errorData = await response.json();
+            alert(`Błąd podczas usuwania zestawu: ${errorData.message || "Nieznany błąd"}`);
+          }
+        } catch (error) {
+          console.error("Delete error:", error);
+          alert("Wystąpił błąd podczas usuwania zestawu");
+        }
+      });
+    });
+  });
+</script>

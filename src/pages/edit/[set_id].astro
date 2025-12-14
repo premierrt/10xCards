@@ -1,0 +1,311 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import type { GetSingleFlashcardSetResponse, FlashcardDetails } from "../../types";
+import { createFlashcardSetService } from "../../lib/services/flashcard-set.service";
+
+const title = "Edytuj zestaw - FlashLearn";
+const description = "Edytuj zestaw fiszek";
+
+// Authentication is handled by middleware
+const user = Astro.locals.user!;
+const supabase = Astro.locals.supabase;
+
+const { set_id } = Astro.params;
+let flashcardSet: GetSingleFlashcardSetResponse | null = null;
+let error: string | null = null;
+
+if (!set_id || isNaN(Number(set_id))) {
+  error = "Nieprawidłowy identyfikator zestawu";
+} else {
+  try {
+    const flashcardSetService = createFlashcardSetService(supabase);
+    flashcardSet = await flashcardSetService.getSingleFlashcardSet(user.id, Number(set_id), true);
+  } catch (e) {
+    error = 'Wystąpił błąd podczas pobierania zestawu fiszek';
+    console.error('Edit page fetch error:', e);
+  }
+}
+
+const flashcardDetails = flashcardSet?.flashcards as FlashcardDetails[] | undefined;
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">
+            {flashcardSet ? `Edytuj: ${flashcardSet.name}` : 'Edytuj zestaw'}
+          </h1>
+          <p class="text-gray-600 mt-2">
+            {flashcardSet ? `${flashcardSet.flashcard_count} fiszek w zestawie` : ''}
+          </p>
+        </div>
+        <a 
+          href="/dashboard" 
+          class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+        >
+          ← Powrót do Dashboard
+        </a>
+      </div>
+
+      <!-- Error state -->
+      {error && (
+        <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+          <p class="text-red-800">{error}</p>
+          <a href="/dashboard" class="text-red-600 underline mt-2 inline-block">
+            Wróć do Dashboard
+          </a>
+        </div>
+      )}
+
+      <!-- Edit Form -->
+      {flashcardSet && flashcardDetails && (
+        <div class="bg-white rounded-lg border shadow-sm">
+          <!-- Set Name Section -->
+          <div class="border-b p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Nazwa zestawu</h2>
+            <form id="update-set-name-form" class="flex gap-4 items-end">
+              <div class="flex-1">
+                <input 
+                  type="text" 
+                  id="set-name"
+                  name="set_name"
+                  value={flashcardSet.name}
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  required
+                />
+              </div>
+              <button 
+                type="submit"
+                class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+              >
+                Zapisz nazwę
+              </button>
+            </form>
+          </div>
+
+          <!-- Flashcards Section -->
+          <div class="p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Fiszki</h2>
+            
+            {flashcardDetails.length === 0 ? (
+              <div class="text-center py-8 text-gray-500">
+                <p>Ten zestaw nie zawiera żadnych fiszek.</p>
+                <a href="/generate" class="text-primary hover:underline mt-2 inline-block">
+                  Wygeneruj nowe fiszki
+                </a>
+              </div>
+            ) : (
+              <div class="space-y-4" id="flashcards-container">
+                {flashcardDetails.map((flashcard, index) => (
+                  <div 
+                    class="border border-gray-200 rounded-lg p-4 flashcard-item"
+                    data-flashcard-id={flashcard.flashcard_id}
+                  >
+                    <div class="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                          Pytanie
+                        </label>
+                        <textarea 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md resize-none flashcard-question"
+                          rows="3"
+                          data-flashcard-id={flashcard.flashcard_id}
+                        >{flashcard.question}</textarea>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                          Odpowiedź
+                        </label>
+                        <textarea 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md resize-none flashcard-answer"
+                          rows="3"
+                          data-flashcard-id={flashcard.flashcard_id}
+                        >{flashcard.answer}</textarea>
+                      </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center mt-4">
+                      <div class="flex gap-2">
+                        <button 
+                          class="px-3 py-1 text-sm bg-green-100 text-green-800 rounded save-flashcard-btn"
+                          data-flashcard-id={flashcard.flashcard_id}
+                        >
+                          Zapisz zmiany
+                        </button>
+                        <button 
+                          class="px-3 py-1 text-sm bg-gray-100 text-gray-800 rounded reset-flashcard-btn"
+                          data-flashcard-id={flashcard.flashcard_id}
+                          data-original-question={flashcard.question}
+                          data-original-answer={flashcard.answer}
+                        >
+                          Resetuj
+                        </button>
+                      </div>
+                      <button 
+                        class="px-3 py-1 text-sm bg-red-100 text-red-800 rounded delete-flashcard-btn"
+                        data-flashcard-id={flashcard.flashcard_id}
+                      >
+                        Usuń fiszkę
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const setId = window.location.pathname.split('/').pop();
+    
+    // Handle set name update
+    const setNameForm = document.getElementById('update-set-name-form');
+    setNameForm?.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const setNameInput = document.getElementById('set-name') as HTMLInputElement;
+      const newName = setNameInput.value.trim();
+      
+      if (!newName) {
+        alert('Nazwa zestawu nie może być pusta');
+        return;
+      }
+      
+      try {
+        // Note: This would require implementing a PATCH endpoint for set names
+        // For now, we'll show a message that this feature is not yet implemented
+        alert('Aktualizacja nazwy zestawu będzie dostępna wkrótce');
+      } catch (error) {
+        console.error('Update set name error:', error);
+        alert('Wystąpił błąd podczas aktualizacji nazwy zestawu');
+      }
+    });
+    
+    // Handle flashcard save
+    const saveButtons = document.querySelectorAll('.save-flashcard-btn');
+    saveButtons.forEach(button => {
+      button.addEventListener('click', async function() {
+        const flashcardId = this.dataset.flashcardId;
+        const container = document.querySelector(`[data-flashcard-id="${flashcardId}"]`);
+        
+        if (!container) return;
+        
+        const questionTextarea = container.querySelector('.flashcard-question') as HTMLTextAreaElement;
+        const answerTextarea = container.querySelector('.flashcard-answer') as HTMLTextAreaElement;
+        
+        const question = questionTextarea.value.trim();
+        const answer = answerTextarea.value.trim();
+        
+        if (!question || !answer) {
+          alert('Pytanie i odpowiedź nie mogą być puste');
+          return;
+        }
+        
+        try {
+          const response = await fetch(`/api/flashcards/${flashcardId}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              question: question,
+              answer: answer
+            })
+          });
+          
+          if (response.ok) {
+            // Visual feedback
+            this.textContent = 'Zapisano!';
+            this.classList.remove('bg-green-100', 'text-green-800');
+            this.classList.add('bg-blue-100', 'text-blue-800');
+            
+            setTimeout(() => {
+              this.textContent = 'Zapisz zmiany';
+              this.classList.remove('bg-blue-100', 'text-blue-800');
+              this.classList.add('bg-green-100', 'text-green-800');
+            }, 2000);
+          } else {
+            const errorData = await response.json();
+            alert(`Błąd podczas zapisywania: ${errorData.message || 'Nieznany błąd'}`);
+          }
+        } catch (error) {
+          console.error('Save flashcard error:', error);
+          alert('Wystąpił błąd podczas zapisywania fiszki');
+        }
+      });
+    });
+    
+    // Handle flashcard reset
+    const resetButtons = document.querySelectorAll('.reset-flashcard-btn');
+    resetButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const flashcardId = this.dataset.flashcardId;
+        const originalQuestion = this.dataset.originalQuestion;
+        const originalAnswer = this.dataset.originalAnswer;
+        
+        const container = document.querySelector(`[data-flashcard-id="${flashcardId}"]`);
+        if (!container) return;
+        
+        const questionTextarea = container.querySelector('.flashcard-question') as HTMLTextAreaElement;
+        const answerTextarea = container.querySelector('.flashcard-answer') as HTMLTextAreaElement;
+        
+        questionTextarea.value = originalQuestion || '';
+        answerTextarea.value = originalAnswer || '';
+      });
+    });
+    
+    // Handle flashcard delete
+    const deleteButtons = document.querySelectorAll('.delete-flashcard-btn');
+    deleteButtons.forEach(button => {
+      button.addEventListener('click', async function() {
+        const flashcardId = this.dataset.flashcardId;
+        
+        if (!confirm('Czy na pewno chcesz usunąć tę fiszkę? Ta akcja jest nieodwracalna.')) {
+          return;
+        }
+        
+        try {
+          const response = await fetch(`/api/flashcards/${flashcardId}`, {
+            method: 'DELETE'
+          });
+          
+          if (response.ok) {
+            // Remove the flashcard from UI
+            const container = document.querySelector(`[data-flashcard-id="${flashcardId}"]`);
+            container?.remove();
+            
+            // Check if no flashcards left
+            const remainingFlashcards = document.querySelectorAll('.flashcard-item');
+            if (remainingFlashcards.length === 0) {
+              const flashcardsContainer = document.getElementById('flashcards-container');
+              if (flashcardsContainer) {
+                flashcardsContainer.innerHTML = `
+                  <div class="text-center py-8 text-gray-500">
+                    <p>Ten zestaw nie zawiera żadnych fiszek.</p>
+                    <a href="/generate" class="text-primary hover:underline mt-2 inline-block">
+                      Wygeneruj nowe fiszki
+                    </a>
+                  </div>
+                `;
+              }
+            }
+          } else {
+            const errorData = await response.json();
+            alert(`Błąd podczas usuwania: ${errorData.message || 'Nieznany błąd'}`);
+          }
+        } catch (error) {
+          console.error('Delete flashcard error:', error);
+          alert('Wystąpił błąd podczas usuwania fiszki');
+        }
+      });
+    });
+  });
+</script>
