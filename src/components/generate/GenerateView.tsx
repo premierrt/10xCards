@@ -2,8 +2,13 @@ import { useFlashcardGenerator } from "../hooks/useFlashcardGenerator";
 import { BackButton } from "./BackButton";
 import { GenerateForm } from "./GenerateForm";
 import { FlashcardReview } from "./FlashcardReview";
+import { DEFAULT_USER_ID } from "../../db/supabase.client";
 
-export function GenerateView() {
+interface GenerateViewProps {
+  userId?: string;
+}
+
+export function GenerateView({ userId }: GenerateViewProps = {}) {
   const {
     viewState,
     generatedFlashcards,
@@ -51,10 +56,10 @@ export function GenerateView() {
       await updateFlashcardStatuses(flashcardIds);
 
       // Create flashcard set
-      // Note: We need user_id from session/context
-      const userId = "current-user-id"; // TODO: Get from auth context
+      // Use provided user ID or fallback to DEFAULT_USER_ID for development
+      const userIdToUse = userId || DEFAULT_USER_ID;
 
-      await createFlashcardSet(userId, setName, flashcardIds);
+      await createFlashcardSet(userIdToUse, setName, flashcardIds);
 
       // Reset to initial state after save
       reset();
